@@ -56,7 +56,11 @@ body{
   -webkit-font-smoothing:antialiased;
   overflow:hidden;
   user-select:none; -webkit-user-select:none;
+  font-variant-numeric:tabular-nums;
 }
+/* Hidden haptic trigger (iOS 18+ system-tick trick via label.click() on a switch
+   checkbox). Off-screen, never focusable/visible, never steals scroll/focus. */
+#hapticHost{ position:fixed; left:-9999px; top:0; width:1px; height:1px; overflow:hidden; pointer-events:none; }
 a{ color:inherit; text-decoration:none; }
 button{ font-family:inherit; color:inherit; background:none; border:0; }
 svg{ display:block; }
@@ -79,6 +83,11 @@ svg{ display:block; }
   opacity:0; transition:opacity 1.2s ease; pointer-events:none;
 }
 body.night #nightVeil{ opacity:1; }
+#nightVeil{ transition:opacity 600ms ease; }
+
+/* Mode-change crossfade (day/night/morning) instead of a jump */
+#gridRow, #bottomRow, #specialView{ transition:opacity 260ms ease; }
+body.reduced-motion #nightVeil, body.reduced-motion #gridRow, body.reduced-motion #bottomRow, body.reduced-motion #specialView{ transition:none; }
 
 /* ---------- ONE backdrop-filter element, clip-path'd to card shapes ---------- */
 #glassSheet{
@@ -130,8 +139,13 @@ body.night #nightVeil{ opacity:1; }
 .nudgeTitle{ font-size:22px; font-weight:500; line-height:1.25; }
 .statusRow{ display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:6px; font-size:12px; color:var(--text-muted); }
 .statusDot{ width:7px; height:7px; border-radius:50%; background:var(--text-muted); }
-.statusDot.on{ background:#3DDC84; }
+/* Gentle breathing while live; static when read-only/connecting. Paused (not just
+   dim) after 10s with no touch, via JS toggling `animation:none` — keeps it out of
+   document.getAnimations() entirely when idle, not just visually stopped. */
+.statusDot.on{ background:#3DDC84; animation:dotBreathe 2s ease-in-out infinite; }
 .statusDot.ro{ background:var(--text-dim); }
+@keyframes dotBreathe{ 0%,100%{ opacity:1; } 50%{ opacity:0.45; } }
+body.reduced-motion .statusDot.on{ animation:none; }
 .keyErrHint{ font-size:12px; color:var(--text-muted); text-align:right; margin-top:4px; max-width:260px; }
 
 /* ---------- Middle grid ---------- */
@@ -153,7 +167,9 @@ body.night #nightVeil{ opacity:1; }
   flex:1; position:relative; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:2px;
   mask-image:linear-gradient(to bottom, black calc(100% - 24px), transparent);
   -webkit-mask-image:linear-gradient(to bottom, black calc(100% - 24px), transparent);
+  scroll-behavior:smooth;
 }
+body.reduced-motion .timelineEvents{ scroll-behavior:auto; }
 .pastSummary{ font-size:14px; color:var(--text-muted); padding:2px 2px 4px; flex-shrink:0; }
 .nowLine{ display:flex; align-items:center; gap:8px; margin:2px 0 4px; flex-shrink:0; }
 .nowLine .line{ flex:1; height:1.5px; background:var(--text); opacity:0.35; border-radius:1px; }
@@ -220,37 +236,58 @@ body.night #nightVeil{ opacity:1; }
 .dockGroup{ display:flex; align-items:center; gap:3px; height:100%; flex-shrink:0; }
 .dockDivider{ width:1px; align-self:stretch; margin:16px 0; background:rgba(255,255,255,0.12); flex-shrink:0; }
 .dockBtn{
+  position:relative;
   min-width:44px; min-height:44px; height:52px; padding:0 7px; border-radius:16px;
   display:flex; align-items:center; justify-content:center; gap:5px;
   background:rgba(255,255,255,0.07); font-size:13px; font-weight:500;
-  transition:transform 120ms ease, background 150ms ease, color 150ms ease;
+  /* Spring back on release: transform only, GPU. Press-down below overrides
+     with a snappier ease-out while the finger is down. */
+  transition:transform 220ms cubic-bezier(.2,.8,.2,1.2), background 160ms ease, color 160ms ease;
   flex-shrink:0; white-space:nowrap;
 }
 .dockBtn svg{ width:18px; height:18px; flex-shrink:0; }
-.dockBtn:active{ transform:scale(0.96); }
+.dockBtn:active{ transform:scale(0.96); transition:transform 90ms ease-out; will-change:transform; }
 .dockBtn.active{ background:var(--focus-fill); color:var(--focus-text); }
-.dockBtn.pending{ animation:pulse 0.9s ease-in-out infinite; }
+.dockBtn.pending::after{
+  content:''; position:absolute; inset:-5px; border-radius:inherit; pointer-events:none;
+  background:var(--accent-soft);
+  animation:breatheGlow 1.6s ease-in-out infinite; will-change:opacity;
+}
 .dockBtn.appBtn{ flex-direction:column; gap:2px; font-size:10px; padding:0 6px; }
 .appSwatch{ width:18px; height:18px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; flex-shrink:0; line-height:1; }
-@keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.55; } }
+/* Soft breathing glow for a pending action, not a hard opacity pulse on the button
+   itself — opacity-only on a layer behind the label so text stays readable. */
+@keyframes breatheGlow{ 0%,100%{ opacity:0.15; } 50%{ opacity:0.6; } }
+body.reduced-motion .dockBtn.pending::after{ animation:none; opacity:0.35; }
 .volGroup{ display:flex; align-items:center; gap:4px; flex-shrink:0; }
 .volBar{ width:56px; height:44px; display:flex; align-items:center; position:relative; cursor:pointer; }
 .volBarTrack{ width:100%; height:8px; border-radius:999px; background:rgba(255,255,255,0.14); overflow:hidden; }
-.volBarFill{ height:100%; border-radius:999px; background:var(--text); }
+.volBarFill{ height:100%; border-radius:999px; background:var(--text); transition:width 180ms ease; }
 .volLabel{ font-size:12px; color:var(--text-dim); min-width:30px; text-align:center; }
+body.reduced-motion .volBarFill{ transition:none; }
 .roDock{ font-size:14px; color:var(--text-dim); padding:0 16px; }
 body.night #dock{ opacity:0.78; }
 
-/* More sheet */
+/* More sheet: kept in flex layout always (display never toggles) so opacity/transform
+   can transition; invisible + non-interactive until .open. Opens with a slide+spring,
+   closes faster/linear-ish (180ms) via .closing overriding the transition duration. */
 #moreSheet{
-  position:fixed; inset:0; z-index:40; display:none; align-items:flex-end; justify-content:center;
-  background:rgba(0,0,0,0.5);
+  position:fixed; inset:0; z-index:40; display:flex; align-items:flex-end; justify-content:center;
+  background:rgba(0,0,0,0); opacity:0; visibility:hidden; pointer-events:none;
+  transition:opacity 260ms ease, background 260ms ease, visibility 260ms ease;
 }
-#moreSheet.open{ display:flex; }
+#moreSheet.open{ opacity:1; visibility:visible; pointer-events:auto; background:rgba(0,0,0,0.5); }
+#moreSheet.closing{ transition:opacity 180ms ease, background 180ms ease, visibility 180ms ease; }
 .sheetPanel{
   width:min(820px, 92%); margin-bottom:calc(84px + var(--safe-b)); border-radius:var(--panel-radius);
   padding:22px 26px; max-height:70vh; overflow-y:auto;
+  transform:translateY(24px); opacity:0;
+  transition:transform 260ms cubic-bezier(.2,.8,.2,1.15), opacity 260ms ease;
 }
+#moreSheet.open .sheetPanel{ transform:translateY(0); opacity:1; }
+#moreSheet.closing .sheetPanel{ transition:transform 180ms ease-in, opacity 180ms ease-in; }
+body.reduced-motion #moreSheet, body.reduced-motion #moreSheet.closing,
+body.reduced-motion .sheetPanel, body.reduced-motion #moreSheet.closing .sheetPanel{ transition:none; }
 .sheetHead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
 .sheetHead h2{ font-size:20px; font-weight:600; margin:0; }
 .sheetSection{ margin-bottom:18px; }
@@ -276,14 +313,15 @@ input[type=range]{ flex:1; height:44px; }
 .remoteOk{ width:56px; }
 .remoteBottom{ margin-top:6px; flex-wrap:wrap; }
 
-/* Toast */
+/* Toast: slide-in pill from the bottom, transform+opacity only */
 #toast{
-  position:fixed; left:50%; bottom:calc(96px + var(--safe-b)); transform:translateX(-50%) translateY(10px);
+  position:fixed; left:50%; bottom:calc(96px + var(--safe-b)); transform:translateX(-50%) translateY(16px);
   padding:12px 20px; border-radius:999px; font-size:14px; background:rgba(0,0,0,0.7);
-  border:1px solid rgba(255,255,255,0.1); opacity:0; pointer-events:none; transition:opacity 200ms ease, transform 200ms ease;
-  z-index:50;
+  border:1px solid rgba(255,255,255,0.1); opacity:0; pointer-events:none; transition:opacity 220ms ease, transform 220ms ease;
+  z-index:50; will-change:auto;
 }
-#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); will-change:transform,opacity; }
+body.reduced-motion #toast{ transition:none; }
 
 /* Special full-screen view: Morning / Night */
 .specialView{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:14px; padding:20px; }
@@ -344,6 +382,11 @@ body.reduced-motion .dockBtn{ transition:none; }
 body.reduced-motion .dockBtn:active{ transform:none; }
 
 video#keepawake{ position:fixed; width:1px; height:1px; opacity:0.01; pointer-events:none; left:0; top:0; }
+
+/* First-load stagger (cards fade up once, transform+opacity only) */
+@keyframes fadeUpIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+.card.firstLoadIn{ animation:fadeUpIn 320ms cubic-bezier(.2,.8,.2,1) both; }
+body.reduced-motion .card.firstLoadIn{ animation:none; }
 </style>
 </head>
 <body>
@@ -447,6 +490,95 @@ var COUNTDOWN_DEFAULTS = [
 
 var AMBI_STYLES = ['Warm White','Cool white','Hot lava','Deep water','Fresh nature','Lounge light','Standard','Natural','Vivid','Game'];
 
+/* ================= Haptics =================
+   Safari on iOS has no navigator.vibrate. The working trick on iOS 18+: a hidden
+   <label><input type="checkbox" switch></label> — calling label.click() fires the
+   system haptic tick. Silent no-op on iPad (no Taptic engine) and everywhere else;
+   feature-detected and wrapped so it can never throw or steal focus/scroll. */
+var hapticLabel = null;
+function setupHaptic(){
+  try{
+    var label = document.createElement('label');
+    label.id = 'hapticHost';
+    label.setAttribute('aria-hidden', 'true');
+    var input = document.createElement('input');
+    input.type = 'checkbox';
+    input.setAttribute('switch', '');
+    input.tabIndex = -1;
+    input.setAttribute('aria-hidden', 'true');
+    label.appendChild(input);
+    document.body.appendChild(label);
+    hapticLabel = label;
+  }catch(e){ hapticLabel = null; }
+}
+function hapticTick(){
+  if(!hapticLabel) return;
+  try{ hapticLabel.click(); }catch(e){}
+}
+/* kind: 'tap' | 'confirm' | 'step' (one tick) | 'error' (two ticks, 90ms apart).
+   Dispatches a DOM event alongside the real tick so tests can observe it without
+   touching the hidden element. Never throws. */
+function haptic(kind){
+  try{ document.dispatchEvent(new CustomEvent('haptic:tick', {detail:{kind:kind||'tap'}})); }catch(e){}
+  try{
+    if(kind === 'error'){ hapticTick(); setTimeout(hapticTick, 90); }
+    else hapticTick();
+  }catch(e){}
+}
+
+/* Status dot: breathes gently while live, pauses (fully, not just dimmed) after
+   10s with no touch — keeps it out of document.getAnimations() when idle. */
+var dotIdleTimer = null;
+function noteActivity(){
+  try{
+    var dot = document.getElementById('statusDot');
+    if(dot) dot.style.animation = '';
+    clearTimeout(dotIdleTimer);
+    dotIdleTimer = setTimeout(function(){
+      var d = document.getElementById('statusDot');
+      if(d) d.style.animation = 'none';
+    }, 10000);
+  }catch(e){}
+}
+
+/* ---------- Count a number up to a new value (short-lived rAF, self-terminating;
+   never a standing idle loop) ---------- */
+function animateCount(el, newVal, suffix, duration){
+  if(!el) return;
+  suffix = suffix || '';
+  var prev = parseFloat(el.dataset.cnt);
+  if(isNaN(prev)) prev = newVal;
+  if(REDUCED_MOTION || prev === newVal){
+    el.textContent = newVal + suffix;
+    el.dataset.cnt = newVal;
+    return;
+  }
+  var start = null;
+  function step(ts){
+    if(start === null) start = ts;
+    var p = Math.min(1, (ts - start) / duration);
+    var v = Math.round(prev + (newVal - prev) * p);
+    el.textContent = v + suffix;
+    if(p < 1) requestAnimationFrame(step);
+    else el.dataset.cnt = newVal;
+  }
+  requestAnimationFrame(step);
+}
+
+/* ---------- Crossfade text content on refresh instead of popping (opacity only) --- */
+function crossfadeSet(el, html, after){
+  if(!el) return;
+  if(el.innerHTML === html){ if(after) after(); return; }
+  if(REDUCED_MOTION){ el.innerHTML = html; if(after) after(); return; }
+  el.style.transition = 'opacity 60ms ease';
+  el.style.opacity = '0';
+  setTimeout(function(){
+    el.innerHTML = html;
+    el.style.opacity = '1';
+    if(after) after();
+  }, 60);
+}
+
 function hexToRgba(hex, a){
   if(!hex) return 'rgba(255,255,255,'+a+')';
   hex = String(hex).replace('#','');
@@ -476,6 +608,14 @@ function boot(){
   applyOrientationClass();
   window.addEventListener('resize', applyOrientationClass);
   window.addEventListener('orientationchange', applyOrientationClass);
+
+  setupHaptic();
+  try{ window.__haptic = haptic; }catch(e){} // test hook only; real calls always go through haptic()
+  ['pointerdown','touchstart','click'].forEach(function(t){
+    document.addEventListener(t, noteActivity, {passive:true});
+  });
+  noteActivity();
+  runFirstLoadStagger();
 
   startClock();
   startBurnInShift();
@@ -743,7 +883,34 @@ function wireKeepAwake(){
   play();
 }
 
+/* ================= First-load stagger ================= */
+var firstLoadRan = false;
+function runFirstLoadStagger(){
+  if(firstLoadRan) return;
+  firstLoadRan = true;
+  if(REDUCED_MOTION) return;
+  var cards = document.querySelectorAll('.card');
+  cards.forEach(function(c, i){
+    c.style.animationDelay = (i * 40) + 'ms';
+    c.classList.add('firstLoadIn');
+  });
+  setTimeout(function(){
+    cards.forEach(function(c){ c.classList.remove('firstLoadIn'); c.style.animationDelay = ''; });
+  }, cards.length * 40 + 320 + 60);
+}
+
 /* ================= Render orchestrator ================= */
+var lastSpecialState = null; // null = not yet decided (no crossfade on first render)
+function fillGridContent(){
+  renderToday();
+  renderFocus();
+  render11x();
+  renderChipsStrip();
+  renderWeatherStrip();
+}
+function fillSpecialContent(isNight, isMorning){
+  if(isNight) renderNight(); else if(isMorning) renderMorning();
+}
 function render(){
   renderStatus();
   renderBackground();
@@ -751,24 +918,30 @@ function render(){
   renderKeyErr();
   var isNight = document.body.classList.contains('night');
   var isMorning = document.body.classList.contains('morning');
+  var wantSpecial = isNight || isMorning;
   var gridRow = document.getElementById('gridRow');
   var bottomRow = document.getElementById('bottomRow');
   var special = document.getElementById('specialView');
-  if(isNight || isMorning){
-    gridRow.style.display = 'none';
-    bottomRow.style.display = 'none';
-    special.style.display = 'flex';
-    if(isNight) renderNight(); else renderMorning();
+
+  if(lastSpecialState !== null && wantSpecial !== lastSpecialState && !REDUCED_MOTION){
+    // Day <-> night/morning: a 600ms crossfade of the layout instead of a jump —
+    // fade the current view out, swap display+content, fade the new one in.
+    var fadeEls = [gridRow, bottomRow, special];
+    fadeEls.forEach(function(el){ el.style.opacity = '0'; });
+    setTimeout(function(){
+      gridRow.style.display = wantSpecial ? 'none' : '';
+      bottomRow.style.display = wantSpecial ? 'none' : '';
+      special.style.display = wantSpecial ? 'flex' : 'none';
+      if(wantSpecial) fillSpecialContent(isNight, isMorning); else fillGridContent();
+      requestAnimationFrame(function(){ fadeEls.forEach(function(el){ el.style.opacity = '1'; }); });
+    }, 260);
   } else {
-    gridRow.style.display = '';
-    bottomRow.style.display = '';
-    special.style.display = 'none';
-    renderToday();
-    renderFocus();
-    render11x();
-    renderChipsStrip();
-    renderWeatherStrip();
+    gridRow.style.display = wantSpecial ? 'none' : '';
+    bottomRow.style.display = wantSpecial ? 'none' : '';
+    special.style.display = wantSpecial ? 'flex' : 'none';
+    if(wantSpecial) fillSpecialContent(isNight, isMorning); else fillGridContent();
   }
+  lastSpecialState = wantSpecial;
   renderPhoneNow();
   renderDock();
   requestAnimationFrame(rebuildGlassMask);
@@ -934,8 +1107,7 @@ function renderToday(){
     }
   }
   html += '</div>';
-  el.innerHTML = html;
-  scrollToCurrent();
+  crossfadeSet(el, html, scrollToCurrent);
 }
 function evtHtml(e, isCurrent, showingTomorrow){
   var cls = 'evt' + (isCurrent?' current':'') + (showingTomorrow?' tomorrow':'');
@@ -951,7 +1123,10 @@ function scrollToCurrent(){
   var container = document.getElementById('timelineEvents');
   if(!container) return;
   var target = container.querySelector('.evt.current') || container.querySelector('.nowLine');
-  if(target) container.scrollTop = Math.max(0, target.offsetTop - 16);
+  if(!target) return;
+  var top = Math.max(0, target.offsetTop - 16);
+  if(REDUCED_MOTION) container.scrollTop = top;
+  else { try{ container.scrollTo({top:top, behavior:'smooth'}); }catch(e){ container.scrollTop = top; } }
 }
 
 /* ---------- Shared helpers for Morning / Night / phone "now" ---------- */
@@ -1025,7 +1200,7 @@ function renderNight(){
   if(kit.length) html += '<div class="svKit">' + kit.map(function(k){ return '<span class="kitChip">'+esc(k)+'</span>'; }).join('') + '</div>';
   if(bed) html += '<div class="svLine">'+esc(bed)+'</div>';
   html += '<div class="svLine svCalm">'+esc(calm)+'</div>';
-  el.innerHTML = html;
+  crossfadeSet(el, html);
 }
 
 /* ---------- Morning view (05:00-10:00): leave-by, ride verdict, gym, focus3 ---------- */
@@ -1046,7 +1221,7 @@ function renderMorning(){
   if(today.gym && (today.gym.what || today.gym.today)) html += '<div class="svLine">Gym: '+esc(today.gym.what || 'today')+'</div>';
   var focus3 = today.focus3 || [];
   if(focus3.length) html += '<div class="svKit">' + focus3.slice(0,3).map(function(f){ return '<span class="kitChip">'+esc(typeof f==='string'?f:f.title||'')+'</span>'; }).join('') + '</div>';
-  el.innerHTML = html;
+  crossfadeSet(el, html);
 }
 
 /* ---------- Phone compact "now" card ---------- */
@@ -1076,7 +1251,7 @@ function renderPhoneNow(){
   if(next) html += '<div class="pnLine">Next: '+esc(next.title)+' '+pad(next.start.getHours())+':'+pad(next.start.getMinutes())+'</div>';
   if(verdict) html += '<div class="pnLine">'+esc(verdict)+'</div>';
   if(topFocus) html += '<div class="pnLine">'+esc(topFocus)+'</div>';
-  el.innerHTML = html;
+  crossfadeSet(el, html);
 }
 
 /* ---------- Focus card ---------- */
@@ -1108,7 +1283,7 @@ function renderFocus(){
     html += '<div class="focusSub">Homework</div>';
     html += homework.slice(0,3).map(function(h){ return '<div class="remItem">'+esc(typeof h==='string'?h:h.title||'')+'</div>'; }).join('');
   }
-  el.innerHTML = html;
+  crossfadeSet(el, html);
 }
 
 /* ---------- 11x card ---------- */
@@ -1152,7 +1327,7 @@ function render11x(){
   if(sh.tasks_mine && sh.tasks_mine.length){
     html += '<div class="shTasks">' + sh.tasks_mine.slice(0,2).map(function(t){ return '<div class="shTask">'+esc(t)+'</div>'; }).join('') + '</div>';
   }
-  el.innerHTML = html;
+  crossfadeSet(el, html);
 }
 function dotsRow(n, target){
   if(target===undefined) return '';
@@ -1269,17 +1444,19 @@ function wireDock(){
     '<button class="dockBtn" data-open="scenes">Scenes ▾</button>' +
     '<button class="dockBtn" data-open="more">More ▾</button>';
 
-  document.getElementById('volBar').addEventListener('click', function(){ doAction('mute', null, this); });
+  document.getElementById('volBar').addEventListener('click', function(){ haptic('tap'); doAction('mute', null, this); });
 
   document.body.addEventListener('click', function(e){
     var btn = e.target.closest('[data-action]');
     if(btn && !document.getElementById('dock').classList.contains('readonly')){
       var v = btn.dataset.v !== undefined ? (isNaN(btn.dataset.v)?btn.dataset.v:Number(btn.dataset.v)) : undefined;
+      haptic(btn.dataset.action === 'volume_up' || btn.dataset.action === 'volume_down' ? 'step' : 'tap');
       doAction(btn.dataset.action, v, btn);
       return;
     }
     var opener = e.target.closest('[data-open]');
     if(opener && !document.getElementById('dock').classList.contains('readonly')){
+      haptic('tap');
       openSheet(opener.dataset.open);
       return;
     }
@@ -1316,7 +1493,10 @@ function renderDock(){
   var vol = tv.volume, max = tv.volMax || 60;
   var pct = (vol!==undefined && max) ? Math.round((vol/max)*100) : 0;
   document.getElementById('volBarFill').style.width = pct+'%';
-  document.getElementById('volLabel').textContent = (tv.muted ? 'Muted' : (vol!==undefined ? vol+'/'+max : '—'));
+  var volLabelEl = document.getElementById('volLabel');
+  if(tv.muted){ volLabelEl.textContent = 'Muted'; volLabelEl.dataset.cnt = ''; }
+  else if(vol !== undefined){ animateCount(volLabelEl, vol, '/'+max, 180); }
+  else { volLabelEl.textContent = '—'; volLabelEl.dataset.cnt = ''; }
 
   var lightsBtn = document.getElementById('lightsBtn');
   if(S.lights && S.lights.known){
@@ -1340,6 +1520,7 @@ function doAction(a, v, btnEl){
     btnEl.classList.add('pending');
     var timeout = setTimeout(function(){
       btnEl.classList.remove('pending');
+      haptic('error');
       showToast("didn't reach the TV");
     }, 2500);
     var arr = pendingTimers.get(btnEl) || [];
@@ -1360,9 +1541,10 @@ function doAction(a, v, btnEl){
       pendingTimers.set(btnEl, []);
       btnEl.classList.remove('pending');
     }
-    if(res && res.ok && res.state){ onLiveState(res.state); }
-    else if(res && res.ok===false){ showToast(res.error || "didn't reach the TV"); }
+    if(res && res.ok && res.state){ haptic('confirm'); onLiveState(res.state); }
+    else if(res && res.ok===false){ haptic('error'); showToast(res.error || "didn't reach the TV"); }
   }).catch(function(){
+    haptic('error');
     showToast("didn't reach the TV");
   });
 }
@@ -1404,10 +1586,18 @@ function openSheet(which){
       remotePadHtml();
     var slider = panel.querySelector('#brightSlider');
     var brightValue = panel.querySelector('#brightValue');
-    slider.addEventListener('input', function(){ brightValue.textContent = slider.value; });
+    var lastStep = Number(slider.value);
+    slider.addEventListener('input', function(){
+      brightValue.textContent = slider.value;
+      var step = Number(slider.value);
+      if(step !== lastStep){ haptic('step'); lastStep = step; }
+    });
     slider.addEventListener('change', function(){ doAction('lights_brightness', Number(slider.value)); });
   }
-  document.getElementById('moreSheet').classList.add('open');
+  var sheetEl = document.getElementById('moreSheet');
+  sheetEl.classList.remove('closing');
+  sheetEl.classList.add('open');
+  requestAnimationFrame(rebuildGlassMask);
 }
 var GOVEE_PRIORITY = ['Sunset','Aurora','Starry Sky','Forest','Moonlight','Sunrise'];
 function goveeScenesHtml(){
@@ -1439,10 +1629,45 @@ function sheetHeadHtml(title){
   return '<div class="sheetHead"><h2>'+title+'</h2><button class="pillBtn" id="sheetDone">Done</button></div>';
 }
 function sceneLabel(s){ return {movie:'Movie',study:'Study',winddown:'Wind down',morning:'Morning'}[s]||s; }
-function closeSheet(){ document.getElementById('moreSheet').classList.remove('open'); }
+function closeSheet(){
+  var sheetEl = document.getElementById('moreSheet');
+  if(!sheetEl.classList.contains('open')) return;
+  sheetEl.classList.add('closing');
+  sheetEl.classList.remove('open');
+  setTimeout(function(){
+    sheetEl.classList.remove('closing');
+    requestAnimationFrame(rebuildGlassMask);
+  }, REDUCED_MOTION ? 0 : 200);
+}
 document.addEventListener('click', function(e){
-  if(e.target.id === 'sheetDone') closeSheet();
+  if(e.target.id === 'sheetDone') { haptic('tap'); closeSheet(); }
 });
+
+/* Swipe-down on the sheet panel to close it (touch only, transform-only drag feedback) */
+(function wireSheetSwipe(){
+  var panel = document.getElementById('sheetPanel');
+  var startY = null, curDelta = 0, dragging = false;
+  panel.addEventListener('touchstart', function(e){
+    if(e.touches.length !== 1) return;
+    startY = e.touches[0].clientY; dragging = true; curDelta = 0;
+    panel.style.transition = 'none';
+  }, {passive:true});
+  panel.addEventListener('touchmove', function(e){
+    if(!dragging || startY === null) return;
+    var dy = e.touches[0].clientY - startY;
+    if(dy < 0) dy = 0;
+    curDelta = dy;
+    panel.style.transform = 'translateY(' + dy + 'px)';
+  }, {passive:true});
+  panel.addEventListener('touchend', function(){
+    if(!dragging) return;
+    dragging = false;
+    panel.style.transition = '';
+    panel.style.transform = '';
+    if(curDelta > 80) closeSheet();
+    startY = null;
+  });
+})();
 
 /* ================= Glass mask (single backdrop-filter, clipped to cards) ================= */
 function roundRectPath(x,y,w,h,r){
@@ -1455,7 +1680,12 @@ function roundRectPath(x,y,w,h,r){
 }
 function rebuildGlassMask(){
   var sheet = document.getElementById('glassSheet');
-  var els = Array.prototype.slice.call(document.querySelectorAll('.glass'));
+  // The More sheet panel is a .glass element that now stays in flow (visibility:hidden,
+  // not display:none) so it can transition — exclude it from the blur clip while closed,
+  // or the backdrop-filter would blur an invisible rect at the bottom of the screen.
+  var els = Array.prototype.slice.call(document.querySelectorAll('.glass')).filter(function(el){
+    return getComputedStyle(el).visibility !== 'hidden';
+  });
   var path = els.map(function(el){
     var r = el.getBoundingClientRect();
     if(r.width<1 || r.height<1) return '';
@@ -1478,7 +1708,7 @@ function showToast(msg){
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2000);
 }
 
 /* ================= Helpers ================= */
