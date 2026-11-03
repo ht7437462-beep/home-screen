@@ -803,7 +803,8 @@ function tickClock(){
 }
 function greetingFor(d){
   var h = d.getHours();
-  if(h>=21 || h<5) return 'Still up, Harry?';
+  if(h>=23 || h<5) return 'Still up, Harry?';
+  if(h>=21) return 'Evening, Harry';
   var part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
   return 'Good ' + part + ', Harry';
 }
@@ -1087,10 +1088,11 @@ function renderToday(){
     }).join('') + '</div>';
   }
   html += '<div class="timelineEvents" id="timelineEvents">';
-  if(past.length){
+  var dayOver = !showingTomorrow && !current && !upcoming.length;
+  if(past.length && !dayOver){
     html += '<div class="pastSummary">'+past.length+' done</div>';
   }
-  if(!showingTomorrow){
+  if(!showingTomorrow && !dayOver){
     html += '<div class="nowLine"><span class="line"></span><span class="dot"></span><span class="label">Now</span><span class="line"></span></div>';
   }
   if(current) html += evtHtml(current, true, showingTomorrow);
@@ -1100,7 +1102,7 @@ function renderToday(){
     var tmr = events.filter(function(e){ return !e.allDay && e.cal !== 'Home' && e.start >= t0 && e.start < t1; })
       .sort(function(a,b){ return a.start-b.start; }).slice(0,4);
     if(tmr.length){
-      html += '<div class="pastSummary" style="margin-top:6px;">Done for today · tomorrow</div>';
+      tomorrowFlag.style.display = '';
       tmr.forEach(function(e, i){ html += evtHtml(e, i===0, true); });
     } else {
       html += '<div class="emptyLine" style="margin:8px 0;">Nothing left today</div>';
@@ -1193,7 +1195,7 @@ function renderNight(){
   var alarm = tonight.first_alarm ? ('Alarm ' + tonight.first_alarm) : '';
   var bed = tonight.bed ? ('Bed by ' + tonight.bed) : '';
   var kit = tonight.kit || [];
-  var calm = (d.getHours()<5) ? 'Still up — try to get some rest' : 'Goodnight, Harry';
+  var calm = (d.getHours()<5) ? 'Still up, try to get some rest' : 'Goodnight, Harry';
   var html = '';
   if(tomorrowFirst) html += '<div class="svBig">'+esc(tomorrowFirst)+'</div>';
   if(alarm) html += '<div class="svLine">'+esc(alarm)+'</div>';
