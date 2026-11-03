@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Home</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Home">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#0b0b0d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;350;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+@font-face{
+  font-family:'Outfit Local';
+  src:url('outfit.ttf') format('truetype');
+  font-weight:200 800;
+  font-display:swap;
+}
+:root{
+  --text:#F5F5F7;
+  --text-dim:rgba(245,245,247,0.56);
+  --text-muted:rgba(245,245,247,0.36);
+  --focus-fill:rgba(255,255,255,0.96);
+  --focus-text:#1C1C1E;
+  --chip-off:rgba(255,255,255,0.12);
+  --chip-set:rgba(255,255,255,0.28);
+  --accent:#FFB46B;
+  --accent-soft:rgba(255,180,107,0.22);
+  --card-radius:22px;
+  --dock-radius:22px;
+  --panel-radius:28px;
+  --chip-radius:999px;
+  --glass-tint:rgba(255,255,255,0.10);
+  --glass-dark:rgba(0,0,0,0.28);
+  --hairline:rgba(255,255,255,0.10);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --shift-x:0px; --shift-y:0px;
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; padding:0; width:100%; height:100%; background:#0b0b0d; overscroll-behavior:none; }
+body{
+  font-family:'Outfit Local','Outfit',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+  user-select:none; -webkit-user-select:none;
+}
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; color:inherit; background:none; border:0; }
+svg{ display:block; }
+
+/* ---------- Background ---------- */
+#bgSharp{
+  position:fixed; inset:-2% -2% -2% -2%;
+  background-size:cover; background-position:center;
+  transition:background-image 600ms ease, transform 10s linear;
+  transform:translate(var(--shift-x), var(--shift-y));
+  will-change:transform;
+}
+#bgScrim{
+  position:fixed; inset:0;
+  background:linear-gradient(to bottom, rgba(0,0,0,0.46) 0%, rgba(0,0,0,0.20) 40%, rgba(0,0,0,0.20) 60%, rgba(0,0,0,0.42) 100%);
+  pointer-events:none;
+}
+#nightVeil{
+  position:fixed; inset:0; background:rgba(0,0,0,0.45);
+  opacity:0; transition:opacity 1.2s ease; pointer-events:none;
+}
+body.night #nightVeil{ opacity:1; }
+
+/* ---------- ONE backdrop-filter element, clip-path'd to card shapes ---------- */
+#glassSheet{
+  position:fixed; inset:0;
+  -webkit-backdrop-filter: blur(40px) saturate(125%);
+  backdrop-filter: blur(40px) saturate(125%);
+  pointer-events:none;
+  z-index:5;
+}
+
+#stage{
+  position:fixed; inset:0;
+  padding: calc(26px + var(--safe-t)) calc(30px + var(--safe-r)) calc(14px + var(--safe-b)) calc(30px + var(--safe-l));
+  display:flex; flex-direction:column; gap:12px;
+  z-index:10;
+  transform:translate(var(--shift-x), var(--shift-y));
+}
+#content{ flex:1; min-height:0; display:flex; flex-direction:column; gap:12px; overflow:hidden; }
+
+.glass{
+  position:relative;
+  background: linear-gradient(135deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02) 45%, transparent), var(--glass-tint);
+  background-color: var(--glass-tint);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.0), 0 10px 30px rgba(0,0,0,0.25);
+  border:1px solid var(--hairline);
+}
+.glass::before{
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:var(--glass-dark);
+  mix-blend-mode:multiply;
+  opacity:0.55;
+}
+.glass::after{
+  content:''; position:absolute; left:0; right:0; top:0; height:26px; border-radius:inherit;
+  background:linear-gradient(to bottom, rgba(255,255,255,0.55), transparent);
+  opacity:0.10; pointer-events:none;
+}
+
+/* ---------- Top row ---------- */
+.topRow{ display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-shrink:0; }
+.greetBlock{ min-width:0; display:flex; flex-direction:column; gap:4px; }
+.clock{ font-size:clamp(56px, 9vw, 112px); font-weight:200; letter-spacing:-0.01em; line-height:1; }
+.greetingRow{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.greeting{ font-size:20px; font-weight:600; margin:0; }
+.dateLine{ font-size:16px; font-weight:350; color:var(--text-dim); display:flex; align-items:center; gap:8px; }
+.dateLine .wx{ display:inline-flex; align-items:center; gap:4px; }
+
+.nudgeBlock{ text-align:right; max-width:46%; min-width:0; }
+.nudgeTitle{ font-size:22px; font-weight:500; line-height:1.25; }
+.statusRow{ display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:6px; font-size:12px; color:var(--text-muted); }
+.statusDot{ width:7px; height:7px; border-radius:50%; background:var(--text-muted); }
+.statusDot.on{ background:#3DDC84; }
+.statusDot.ro{ background:var(--text-dim); }
+.keyErrHint{ font-size:12px; color:var(--text-muted); text-align:right; margin-top:4px; max-width:260px; }
+
+/* ---------- Middle grid ---------- */
+.gridRow{ display:grid; grid-template-columns: 1.25fr 1fr 1fr; gap:12px; flex:1; min-height:0; }
+.card{ border-radius:var(--card-radius); padding:18px 20px; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+.cardHead{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.cardTitle{ font-size:15px; font-weight:500; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dim); display:flex; align-items:center; gap:8px; }
+.cardTitle svg{ width:16px; height:16px; opacity:0.8; }
+.cardSub{ font-size:11px; font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-muted); }
+.cardBody{
+  flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column;
+  mask-image:linear-gradient(to bottom, black calc(100% - 20px), transparent);
+  -webkit-mask-image:linear-gradient(to bottom, black calc(100% - 20px), transparent);
+}
+.emptyLine{ font-size:16px; color:var(--text-muted); margin:auto 0; }
+
+/* Today timeline */
+.timelineEvents{
+  flex:1; position:relative; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:2px;
+  mask-image:linear-gradient(to bottom, black calc(100% - 24px), transparent);
+  -webkit-mask-image:linear-gradient(to bottom, black calc(100% - 24px), transparent);
+}
+.pastSummary{ font-size:14px; color:var(--text-muted); padding:2px 2px 4px; flex-shrink:0; }
+.nowLine{ display:flex; align-items:center; gap:8px; margin:2px 0 4px; flex-shrink:0; }
+.nowLine .line{ flex:1; height:1.5px; background:var(--text); opacity:0.35; border-radius:1px; }
+.nowLine .dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); flex-shrink:0; }
+.nowLine .label{ font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-dim); flex-shrink:0; }
+.allDayChips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.chip{ font-size:13px; font-weight:500; padding:6px 12px; border-radius:var(--chip-radius); background:var(--chip-off); white-space:nowrap; }
+.evt{ border-radius:14px; padding:10px 12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
+.evt.current{ background:rgba(255,255,255,0.11); border-color:rgba(255,255,255,0.18); }
+.evt.current .evtTitle{ font-weight:600; }
+.evt.tomorrow{ background:rgba(255,255,255,0.03); }
+.evt .evtTime{ font-size:12px; color:var(--text-dim); font-weight:500; text-transform:uppercase; letter-spacing:0.04em; }
+.evt .evtTitle{ font-size:17px; font-weight:500; margin-top:2px; }
+.evt .evtWhere{ font-size:14px; color:var(--text-dim); margin-top:1px; }
+.evtBadge{ display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,0.16); margin-right:6px; vertical-align:middle; }
+
+/* Focus card */
+.focusList{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
+.focusList li{ display:flex; align-items:flex-start; gap:10px; font-size:17px; }
+.tick{ width:20px; height:20px; border-radius:50%; border:1.6px solid rgba(255,255,255,0.4); flex-shrink:0; margin-top:2px; }
+.focusSub{ font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin:14px 0 6px; }
+.remItem{ font-size:15px; color:var(--text-dim); }
+.remMore{ font-size:13px; color:var(--text-muted); }
+
+/* 11x card */
+.mrrBig{ font-size:40px; font-weight:600; line-height:1; }
+.mrrGoal{ font-size:16px; color:var(--text-dim); margin-left:6px; font-weight:400; }
+.pctChip{ font-size:13px; font-weight:600; color:var(--text-dim); margin-top:4px; }
+.progressWrap{ position:relative; margin:14px 0 6px; }
+.progressTrack{ height:8px; border-radius:999px; background:rgba(255,255,255,0.12); overflow:hidden; }
+.progressFill{ height:100%; border-radius:999px; background:var(--accent-soft); transition:width 600ms ease; }
+.progressMarker{ position:absolute; top:-4px; width:2px; height:16px; background:rgba(255,255,255,0.5); }
+.progressMarkerLabel{ position:absolute; top:14px; font-size:11px; color:var(--text-muted); transform:translateX(-50%); }
+.statLine{ font-size:15px; color:var(--text-dim); margin-top:10px; display:flex; justify-content:space-between; gap:8px; }
+.statLine b{ color:var(--text); font-weight:500; }
+.statLineSecondary{ font-size:12px; color:var(--text-muted); margin-top:4px; }
+.dotsRow{ display:flex; gap:4px; margin-top:4px; }
+.dotsRow span{ width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.14); }
+.dotsRow span.filled{ background:var(--accent-soft); }
+.waitingLine{ margin-top:10px; font-size:15px; font-weight:600; color:var(--text); }
+.shTasks{ margin-top:10px; display:flex; flex-direction:column; gap:4px; }
+.shTask{ font-size:13px; color:var(--text-dim); }
+
+/* Bottom chips row */
+.bottomRow{ display:flex; gap:12px; align-items:stretch; flex-shrink:0; }
+.chipsStrip{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; flex:1; }
+.countChip{ font-size:13px; font-weight:500; padding:8px 14px; border-radius:var(--chip-radius); background:var(--chip-off); }
+.countChipFar{ opacity:0.55; font-size:12px; padding:6px 12px; }
+.gymChip{ font-size:13px; font-weight:500; padding:8px 14px; border-radius:var(--chip-radius); background:var(--chip-off); display:flex; align-items:center; gap:6px; }
+.weatherStrip{ display:flex; align-items:center; gap:14px; padding:10px 16px; border-radius:var(--chip-radius); flex-shrink:0; }
+.weatherStrip .wxNow{ font-size:20px; font-weight:600; }
+.weatherStrip .wxMeta{ font-size:13px; color:var(--text-dim); }
+.weatherStrip .wxVerdict{ font-size:13px; color:var(--text-dim); max-width:260px; }
+
+/* ---------- Dock ---------- */
+#dock{
+  height:72px; border-radius:var(--dock-radius); flex-shrink:0;
+  display:flex; align-items:center; gap:3px; padding:0 5px;
+  transition:opacity 300ms ease, filter 300ms ease;
+  overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+#dock::-webkit-scrollbar{ display:none; }
+#dock.readonly{ opacity:0.55; filter:grayscale(0.6); pointer-events:none; }
+.dockGroup{ display:flex; align-items:center; gap:3px; height:100%; flex-shrink:0; }
+.dockDivider{ width:1px; align-self:stretch; margin:16px 0; background:rgba(255,255,255,0.12); flex-shrink:0; }
+.dockBtn{
+  min-width:44px; min-height:44px; height:52px; padding:0 7px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  background:rgba(255,255,255,0.07); font-size:13px; font-weight:500;
+  transition:transform 120ms ease, background 150ms ease, color 150ms ease;
+  flex-shrink:0; white-space:nowrap;
+}
+.dockBtn svg{ width:18px; height:18px; flex-shrink:0; }
+.dockBtn:active{ transform:scale(0.96); }
+.dockBtn.active{ background:var(--focus-fill); color:var(--focus-text); }
+.dockBtn.pending{ animation:pulse 0.9s ease-in-out infinite; }
+.dockBtn.appBtn{ flex-direction:column; gap:2px; font-size:10px; padding:0 6px; }
+.appSwatch{ width:18px; height:18px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; flex-shrink:0; line-height:1; }
+@keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.55; } }
+.volGroup{ display:flex; align-items:center; gap:4px; flex-shrink:0; }
+.volBar{ width:56px; height:44px; display:flex; align-items:center; position:relative; cursor:pointer; }
+.volBarTrack{ width:100%; height:8px; border-radius:999px; background:rgba(255,255,255,0.14); overflow:hidden; }
+.volBarFill{ height:100%; border-radius:999px; background:var(--text); }
+.volLabel{ font-size:12px; color:var(--text-dim); min-width:30px; text-align:center; }
+.roDock{ font-size:14px; color:var(--text-dim); padding:0 16px; }
+body.night #dock{ opacity:0.78; }
+
+/* More sheet */
+#moreSheet{
+  position:fixed; inset:0; z-index:40; display:none; align-items:flex-end; justify-content:center;
+  background:rgba(0,0,0,0.5);
+}
+#moreSheet.open{ display:flex; }
+.sheetPanel{
+  width:min(820px, 92%); margin-bottom:calc(84px + var(--safe-b)); border-radius:var(--panel-radius);
+  padding:22px 26px; max-height:70vh; overflow-y:auto;
+}
+.sheetHead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.sheetHead h2{ font-size:20px; font-weight:600; margin:0; }
+.sheetSection{ margin-bottom:18px; }
+.sheetLabel{ font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:8px; }
+.swatchRow{ display:flex; gap:10px; flex-wrap:wrap; }
+.swatch{ width:44px; height:44px; border-radius:50%; border:2px solid rgba(255,255,255,0.2); }
+.swatch.selected{ border-color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,0.3); }
+.sliderRow{ display:flex; align-items:center; gap:12px; }
+input[type=range]{ flex:1; height:44px; }
+.sliderValue{ font-size:14px; color:var(--text-dim); min-width:32px; text-align:right; }
+.ambiLabel{ font-size:14px; color:var(--text-dim); margin-bottom:8px; }
+.ambiNote{ font-size:12px; color:var(--text-muted); margin-top:6px; }
+.pillRow{ display:flex; gap:8px; flex-wrap:wrap; }
+.pillBtn{ padding:10px 16px; border-radius:999px; background:rgba(255,255,255,0.08); font-size:14px; font-weight:500; min-height:44px; }
+.scrollChips{ display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:4px; scrollbar-width:none; }
+.scrollChips::-webkit-scrollbar{ display:none; }
+.chipBtn{ flex-shrink:0; padding:10px 16px; border-radius:999px; background:rgba(255,255,255,0.08); font-size:14px; font-weight:500; min-height:44px; white-space:nowrap; }
+.chipBtn.selected{ background:var(--focus-fill); color:var(--focus-text); }
+.remotePad{ display:flex; flex-direction:column; align-items:center; gap:8px; max-width:280px; margin:0 auto; }
+.remoteRow{ display:flex; gap:8px; align-items:center; justify-content:center; width:100%; }
+.remoteRow span{ width:44px; height:44px; flex-shrink:0; }
+.remoteKey{ width:44px; height:44px; min-height:44px; padding:0; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.remoteOk{ width:56px; }
+.remoteBottom{ margin-top:6px; flex-wrap:wrap; }
+
+/* Toast */
+#toast{
+  position:fixed; left:50%; bottom:calc(96px + var(--safe-b)); transform:translateX(-50%) translateY(10px);
+  padding:12px 20px; border-radius:999px; font-size:14px; background:rgba(0,0,0,0.7);
+  border:1px solid rgba(255,255,255,0.1); opacity:0; pointer-events:none; transition:opacity 200ms ease, transform 200ms ease;
+  z-index:50;
+}
+#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* Special full-screen view: Morning / Night */
+.specialView{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:14px; padding:20px; }
+.svBig{ font-size:clamp(22px,3vw,30px); font-weight:500; }
+.svLine{ font-size:18px; color:var(--text-dim); }
+.svCalm{ color:var(--text-muted); font-size:15px; margin-top:6px; }
+.svKit{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.kitChip{ font-size:14px; padding:6px 14px; border-radius:999px; background:var(--chip-off); }
+
+/* Phone compact "now" card */
+.phoneNow{ display:none; }
+.pnTime{ font-size:34px; font-weight:300; }
+.pnLine{ font-size:15px; color:var(--text-dim); margin-top:4px; }
+
+/* Portrait */
+body.portrait .gridRow{ grid-template-columns:1fr; grid-template-rows:auto auto auto; }
+body.portrait .bottomRow{ flex-wrap:wrap; }
+body.portrait #dock{ height:auto; flex-wrap:wrap; padding:10px; }
+
+/* ---------- Phone (<600px): iPhone 13 390x844, compact "now" card first, then dock, then content ---------- */
+body.phone #stage{ overflow-y:auto; -webkit-overflow-scrolling:touch; height:auto; min-height:100%; padding-bottom: calc(24px + var(--safe-b)); }
+body.phone .topRow{ order:0; }
+body.phone .phoneNow{ display:block; order:1; padding:16px 18px; }
+body.phone #dock{ order:2; }
+body.phone #content{ order:3; flex:none; overflow:visible; }
+body.phone .nudgeBlock{ max-width:56%; }
+body.phone .clock{ font-size:min(15vw,56px); }
+body.phone .greeting{ font-size:20px; }
+
+/* No reliance on display:contents (unsupported on this WebKit build — falls back to
+   the group's own display:flex, which breaks a shared 2-col grid). Instead each
+   .dockGroup wraps its own buttons at ~50% width, giving the same 2-column feel
+   without needing items to escape their group container. */
+body.phone #dock{
+  display:flex; flex-direction:column; flex-wrap:nowrap; gap:8px; height:auto; padding:14px;
+  overflow-x:hidden; overflow-y:auto;
+}
+body.phone .dockGroup{ display:flex; flex-wrap:wrap; gap:8px; width:100%; height:auto; }
+body.phone .dockDivider{ display:none; }
+body.phone .dockBtn{ flex:1 1 calc(50% - 4px); width:auto; height:56px; min-height:56px; justify-content:center; }
+body.phone #dockVol{ flex-wrap:nowrap; align-items:center; gap:10px; height:56px; }
+body.phone #dockVol .dockBtn{ flex:0 0 44px; width:44px; }
+body.phone #dockVol .volBar{ flex:1 1 auto; width:auto; min-width:44px; }
+body.phone #dock.readonly{ display:none; }
+
+body.phone #content{ display:flex; flex-direction:column; gap:12px; }
+body.phone .gridRow{ flex:none; display:flex; flex-direction:column; gap:12px; }
+body.phone .specialView{ flex:none; padding:28px 10px; }
+body.phone .card{ flex:none; min-height:140px; max-height:320px; }
+body.phone .timelineEvents{ max-height:260px; }
+body.phone .focusList{ max-height:200px; }
+body.phone .bottomRow{ flex-direction:column; align-items:stretch; }
+body.phone .weatherStrip{ display:flex; }
+
+/* Reduced motion */
+body.reduced-motion #bgSharp{ transition:none; }
+body.reduced-motion .dockBtn{ transition:none; }
+body.reduced-motion .dockBtn:active{ transform:none; }
+
+video#keepawake{ position:fixed; width:1px; height:1px; opacity:0.01; pointer-events:none; left:0; top:0; }
+</style>
+</head>
+<body>
+
+<div id="bgSharp"></div>
+<div id="bgScrim"></div>
+<div id="glassSheet"></div>
+<div id="nightVeil"></div>
+
+<div id="stage">
+  <div class="topRow">
+    <div class="greetBlock">
+      <div class="clock" id="clock">--:--</div>
+      <div class="greetingRow">
+        <span class="greeting" id="greeting">Good evening, Harry</span>
+        <span class="dateLine" id="dateLine">—</span>
+      </div>
+    </div>
+    <div class="nudgeBlock">
+      <div class="nudgeTitle" id="nudgeTitle"></div>
+      <div class="statusRow">
+        <span class="statusDot" id="statusDot"></span>
+        <span id="statusText">connecting</span>
+      </div>
+      <div class="keyErrHint" id="keyErrHint" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="card glass phoneNow" id="phoneNow"></div>
+
+  <div id="content">
+    <div class="gridRow" id="gridRow">
+      <div class="card glass" id="cardToday">
+        <div class="cardHead"><div class="cardTitle">Today</div><div class="cardTitle" id="tomorrowFlag" style="display:none">Tomorrow</div></div>
+        <div class="cardBody" id="todayBody"></div>
+      </div>
+      <div class="card glass" id="cardFocus">
+        <div class="cardHead"><div class="cardTitle">Focus</div></div>
+        <div class="cardBody" id="focusBody"></div>
+      </div>
+      <div class="card glass" id="card11x">
+        <div class="cardHead"><div class="cardTitle">11x<span class="cardSub"> · SH Studios MRR</span></div></div>
+        <div class="cardBody" id="elevenxBody"></div>
+      </div>
+    </div>
+
+    <div class="specialView" id="specialView" style="display:none"></div>
+
+    <div class="bottomRow" id="bottomRow">
+      <div class="chipsStrip glass" id="chipsStrip" style="border-radius:var(--chip-radius); padding:8px 10px;"></div>
+      <div class="weatherStrip glass" id="weatherStrip" style="display:none"></div>
+    </div>
+  </div>
+
+  <div id="dock" class="glass">
+    <div class="dockGroup" id="dockPower"></div>
+    <div class="dockDivider"></div>
+    <div class="dockGroup volGroup" id="dockVol"></div>
+    <div class="dockDivider"></div>
+    <div class="dockGroup" id="dockApps"></div>
+    <div class="dockDivider"></div>
+    <div class="dockGroup" id="dockExtra"></div>
+    <div class="roDock" id="roDockMsg" style="display:none">TV is off or asleep · press the remote</div>
+  </div>
+</div>
+
+<div id="moreSheet">
+  <div class="sheetPanel glass" id="sheetPanel"></div>
+</div>
+
+<div id="toast"></div>
+<video id="keepawake" src="awake.mp4" muted playsinline loop></video>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= Config ================= */
+var GIST_ID = '';
+var GIST_FILES = ['rem','sh','cal','today','tonight'];
+function gistUrl(file){ return 'https://gist.githubusercontent.com/ht7437462-beep/' + GIST_ID + '/raw/' + file + '.json?t=' + Date.now(); }
+
+var qs = new URLSearchParams(location.search);
+var NOW_OVERRIDE = qs.get('now'); // ISO string, for tests
+function nowDate(){ return NOW_OVERRIDE ? new Date(NOW_OVERRIDE) : new Date(); }
+
+var REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(REDUCED_MOTION) document.body.classList.add('reduced-motion');
+
+var ROOM_COLOURS = {
+  warm:'#FFB46B', cool:'#DCE8FF', red:'#FF2D2D', purple:'#A64DFF', blue:'#3D7CFF', green:'#3DDC84', graphite:'#8A8A8E'
+};
+var SWATCH_ORDER = ['warm','cool','red','purple','blue','green'];
+
+var COUNTDOWN_DEFAULTS = [
+  {what:'Business Show', date:'2026-11-11'},
+  {what:'Driving test', date:'2027-01-05'},
+  {what:'A-levels', date:'2027-05-11'},
+  {what:'11x goal', date:'2027-06-30'}
+];
+
+var AMBI_STYLES = ['Warm White','Cool white','Hot lava','Deep water','Fresh nature','Lounge light','Standard','Natural','Vivid','Game'];
+
+function hexToRgba(hex, a){
+  if(!hex) return 'rgba(255,255,255,'+a+')';
+  hex = String(hex).replace('#','');
+  if(hex.length===3) hex = hex.split('').map(function(c){ return c+c; }).join('');
+  var r=parseInt(hex.substr(0,2),16), g=parseInt(hex.substr(2,2),16), b=parseInt(hex.substr(4,2),16);
+  if(isNaN(r)||isNaN(g)||isNaN(b)) return 'rgba(255,255,255,'+a+')';
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+
+/* ================= State ================= */
+var S = {
+  mode: 'connecting', // connecting | live | readonly
+  tv: null, ambi: null, room: null, lights: null, last: null, weather: null,
+  feeds: { rem:null, sh:null, cal:null, today:null, tonight:null },
+  tsFeeds: {}, // per-feed fetch timestamp for staleness
+  stateTs: null,
+  pendingAction: null
+};
+
+var isLiveHost = !(location.hostname === '' || location.protocol === 'file:' || /github\.io$/.test(location.hostname));
+var es = null, liveFailSince = null, lastLiveOkAt = null;
+var liveBackoffIdx = 0;
+var LIVE_BACKOFFS = [1000,2000,5000,10000];
+
+/* ================= Boot ================= */
+function boot(){
+  applyOrientationClass();
+  window.addEventListener('resize', applyOrientationClass);
+  window.addEventListener('orientationchange', applyOrientationClass);
+
+  startClock();
+  startBurnInShift();
+  wireDock();
+  wireKeepAwake();
+
+  var stageEl = document.getElementById('stage');
+  var maskRaf = null;
+  stageEl.addEventListener('scroll', function(){
+    if(maskRaf) return;
+    maskRaf = requestAnimationFrame(function(){ maskRaf=null; rebuildGlassMask(); });
+  }, {passive:true});
+
+  var fragId = (location.hash.match(/g=([a-f0-9]+)/) || [])[1];
+  try { if(fragId) localStorage.setItem('gistId', fragId); else if(!GIST_ID) fragId = localStorage.getItem('gistId') || ''; } catch(e){}
+  if(fragId) GIST_ID = fragId;
+
+  connectLive();
+  pollWeather();
+  setInterval(pollWeather, 20*60*1000);
+
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) reconnectAll(); });
+  window.addEventListener('pageshow', reconnectAll);
+  window.addEventListener('online', reconnectAll);
+}
+
+function reconnectAll(){
+  connectLive();
+}
+
+/* ================= Live mode (EventSource + poll) ================= */
+function connectLive(){
+  if(!isLiveHost){ fallbackToReadOnly(); return; }
+  try{
+    if(es){ try{ es.close(); }catch(e){} }
+    es = new EventSource('/api/events');
+    es.addEventListener('state', function(ev){
+      try{
+        var data = JSON.parse(ev.data);
+        onLiveState(data);
+      }catch(e){}
+    });
+    es.onerror = function(){
+      // Close immediately so the browser's own internal EventSource reconnect timer
+      // doesn't also fire and race our manual backoff below (two reconnect drivers
+      // fighting each other was evicting good connections on the server side).
+      try{ if(es) es.close(); }catch(e){}
+      es = null;
+      if(!liveFailSince) liveFailSince = Date.now();
+      scheduleLiveRetry();
+    };
+    es.onopen = function(){ liveFailSince = null; liveBackoffIdx = 0; };
+  }catch(e){
+    fallbackToReadOnly();
+  }
+  // also poll /api/state every 5s as a belt-and-braces
+  if(window._statePoll) clearInterval(window._statePoll);
+  window._statePoll = setInterval(pollState, 5000);
+  pollState();
+}
+
+var pollStateInFlight = false;
+function pollState(){
+  if(!isLiveHost || pollStateInFlight) return;
+  pollStateInFlight = true;
+  fetch('/api/state', {cache:'no-store', signal:AbortSignal.timeout(4000)}).then(function(r){
+    if(!r.ok) throw new Error('bad status');
+    return r.json();
+  }).then(function(data){
+    onLiveState(data);
+  }).catch(function(){
+    if(!liveFailSince) liveFailSince = Date.now();
+    checkLiveTimeout();
+  }).finally(function(){ pollStateInFlight = false; });
+}
+
+function scheduleLiveRetry(){
+  checkLiveTimeout();
+  var delay = LIVE_BACKOFFS[Math.min(liveBackoffIdx, LIVE_BACKOFFS.length-1)];
+  liveBackoffIdx++;
+  setTimeout(function(){
+    if(S.mode !== 'live') connectLive();
+  }, delay);
+}
+
+function checkLiveTimeout(){
+  if(liveFailSince && (Date.now() - liveFailSince) > 8000){
+    fallbackToReadOnly();
+  }
+}
+
+function onLiveState(data){
+  liveFailSince = null;
+  lastLiveOkAt = Date.now();
+  S.mode = 'live';
+  S.tv = data.tv || null;
+  S.ambi = data.ambi || null;
+  S.room = data.room || null;
+  S.lights = data.lights || null;
+  S.last = data.last || null;
+  // Page's own open-meteo poll wins; the TV's cached weather (different field shape)
+  // is only a fallback until the page has its own, so it never clobbers the real one.
+  if(!S.weather) S.weather = data.weather || null;
+  S.stateTs = data.ts || Date.now();
+  if(data.feeds){
+    GIST_FILES.forEach(function(f){
+      if(data.feeds[f] !== undefined && data.feeds[f] !== null){
+        S.feeds[f] = data.feeds[f];
+      }
+    });
+  }
+  render();
+  // start trying every 10s in background is implicit via poll/SSE already running
+}
+
+/* ================= Read-only mode (gist) ================= */
+var roTimer = null;
+function fallbackToReadOnly(){
+  if(S.mode === 'readonly') { pollGistIfDue(); return; }
+  S.mode = 'readonly';
+  S.tv = null; S.ambi = null; S.room = null; S.lights = null;
+  pollGistIfDue();
+  if(roTimer) clearInterval(roTimer);
+  roTimer = setInterval(pollGistIfDue, 60000);
+  // keep trying the TV every 10s
+  if(isLiveHost && window._tvRetry) clearInterval(window._tvRetry);
+  if(isLiveHost){
+    window._tvRetry = setInterval(function(){
+      fetch('/api/state', {cache:'no-store', signal:AbortSignal.timeout(4000)}).then(function(r){ if(r.ok) return r.json(); throw 0; })
+        .then(function(data){ clearInterval(window._tvRetry); onLiveState(data); })
+        .catch(function(){});
+    }, 10000);
+  }
+  render();
+}
+
+function pollGistIfDue(){
+  GIST_FILES.forEach(function(file){
+    fetch(gistUrl(file), {signal:AbortSignal.timeout(6000)}).then(function(r){ return r.json(); }).then(function(data){
+      S.feeds[file] = data;
+      S.tsFeeds[file] = Date.now();
+      S.stateTs = Date.now();
+      render();
+    }).catch(function(){ /* leave stale data, missing hides lines */ });
+  });
+}
+
+/* ================= Weather ================= */
+function pollWeather(){
+  var base = 'https://api.open-meteo.com/v1/forecast?latitude=50.968&longitude=-1.352&hourly=temperature_2m,apparent_temperature,precipitation_probability,wind_speed_10m,wind_gusts_10m,weather_code&timezone=Europe%2FLondon';
+  fetch(base + '&models=ukmo_seamless', {signal:AbortSignal.timeout(6000)}).then(function(r){
+    if(!r.ok) throw 0; return r.json();
+  }).catch(function(){
+    return fetch(base + '&models=best_match', {signal:AbortSignal.timeout(6000)}).then(function(r){ return r.json(); });
+  }).then(function(data){
+    S.weather = data; render();
+  }).catch(function(){ /* leave weather strip hidden */ });
+}
+
+/* ================= Clock / greeting / date ================= */
+function startClock(){ tickClock(); setInterval(tickClock, REDUCED_MOTION ? 10000 : 1000); }
+function pad(n){ return (n<10?'0':'')+n; }
+var lastMinuteBucket = null;
+function tickClock(){
+  var d = nowDate();
+  document.getElementById('clock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  document.getElementById('dateLine').innerHTML = dateLineHtml(d);
+  document.getElementById('greeting').textContent = greetingFor(d);
+  var wasNight = document.body.classList.contains('night');
+  var wasMorning = document.body.classList.contains('morning');
+  applyDayNightMode(d);
+  var isNight = document.body.classList.contains('night');
+  var isMorning = document.body.classList.contains('morning');
+  var bucket = d.getHours()*60 + d.getMinutes();
+  if(wasNight !== isNight || wasMorning !== isMorning){
+    render();
+  } else if(bucket !== lastMinuteBucket){
+    // Re-group Today's past/current/upcoming (and refresh the night/morning view)
+    // once a minute even without new feed data, since "now" keeps moving.
+    if(isNight) renderNight();
+    else if(isMorning) renderMorning();
+    else renderToday();
+  }
+  lastMinuteBucket = bucket;
+}
+function greetingFor(d){
+  var h = d.getHours();
+  if(h>=21 || h<5) return 'Still up, Harry?';
+  var part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  return 'Good ' + part + ', Harry';
+}
+function dateLineHtml(d){
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var mons=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var s = days[d.getDay()] + ' ' + d.getDate() + ' ' + mons[d.getMonth()];
+  if(S.weather) s += ' <span class="wx">· ' + weatherNowVerdictShort() + '</span>';
+  return s;
+}
+function weatherNowVerdictShort(){
+  try{
+    var hrs = S.weather.hourly;
+    var idx = nearestHourIdx(hrs.time);
+    if(idx<0) return '';
+    var t = Math.round(hrs.temperature_2m[idx]);
+    return t + '° ' + wxCodeLabel(hrs.weather_code[idx]);
+  }catch(e){ return ''; }
+}
+function nearestHourIdx(times){
+  var n = nowDate().getTime();
+  var best=-1, bestDiff=Infinity;
+  for(var i=0;i<times.length;i++){
+    var diff = Math.abs(new Date(times[i]).getTime() - n);
+    if(diff<bestDiff){ bestDiff=diff; best=i; }
+  }
+  return best;
+}
+function wxCodeLabel(code){
+  if(code===0) return 'Clear';
+  if(code<=3) return 'Cloudy';
+  if(code<=48) return 'Foggy';
+  if(code<=67) return 'Rain';
+  if(code<=77) return 'Snow';
+  if(code<=82) return 'Showers';
+  if(code<=86) return 'Snow showers';
+  return 'Stormy';
+}
+
+/* ================= Day / night mode ================= */
+function applyDayNightMode(d){
+  var h = d.getHours();
+  var night = (h>=21) || (h<5);
+  document.body.classList.toggle('night', night);
+  var morning = (h>=5 && h<10);
+  document.body.classList.toggle('morning', morning);
+}
+
+/* ================= Orientation ================= */
+function applyOrientationClass(){
+  var portrait = window.innerHeight > window.innerWidth;
+  document.body.classList.toggle('portrait', portrait);
+  document.body.classList.toggle('phone', window.innerWidth < 600);
+  requestAnimationFrame(rebuildGlassMask);
+}
+
+/* ================= Burn-in shift ================= */
+function startBurnInShift(){
+  function shift(){
+    var x = (Math.random()*8-4).toFixed(1);
+    var y = (Math.random()*8-4).toFixed(1);
+    if(REDUCED_MOTION){ x=0; y=0; }
+    document.documentElement.style.setProperty('--shift-x', x+'px');
+    document.documentElement.style.setProperty('--shift-y', y+'px');
+  }
+  shift();
+  setInterval(shift, 10*60*1000);
+}
+
+/* ================= Keep awake ================= */
+function wireKeepAwake(){
+  var v = document.getElementById('keepawake');
+  function play(){ v.play().catch(function(){}); }
+  document.addEventListener('touchstart', play, {once:false, passive:true});
+  document.addEventListener('click', play);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) play(); });
+  play();
+}
+
+/* ================= Render orchestrator ================= */
+function render(){
+  renderStatus();
+  renderBackground();
+  renderNudge();
+  renderKeyErr();
+  var isNight = document.body.classList.contains('night');
+  var isMorning = document.body.classList.contains('morning');
+  var gridRow = document.getElementById('gridRow');
+  var bottomRow = document.getElementById('bottomRow');
+  var special = document.getElementById('specialView');
+  if(isNight || isMorning){
+    gridRow.style.display = 'none';
+    bottomRow.style.display = 'none';
+    special.style.display = 'flex';
+    if(isNight) renderNight(); else renderMorning();
+  } else {
+    gridRow.style.display = '';
+    bottomRow.style.display = '';
+    special.style.display = 'none';
+    renderToday();
+    renderFocus();
+    render11x();
+    renderChipsStrip();
+    renderWeatherStrip();
+  }
+  renderPhoneNow();
+  renderDock();
+  requestAnimationFrame(rebuildGlassMask);
+}
+
+function renderStatus(){
+  var dot = document.getElementById('statusDot');
+  var txt = document.getElementById('statusText');
+  dot.className = 'statusDot';
+  if(S.mode==='live'){ dot.classList.add('on'); txt.textContent='live'; }
+  else if(S.mode==='readonly'){ dot.classList.add('ro'); txt.textContent='read-only'; }
+  else { txt.textContent='connecting'; }
+  var newestTs;
+  if(S.mode === 'readonly'){
+    newestTs = 0;
+    Object.keys(S.tsFeeds).forEach(function(k){ newestTs = Math.max(newestTs, S.tsFeeds[k]); });
+  } else {
+    newestTs = S.stateTs || 0;
+  }
+  var age = Date.now() - newestTs;
+  if(newestTs && age > 20*60*1000){
+    var d = new Date(newestTs);
+    txt.textContent += ' · updated ' + pad(d.getHours())+':'+pad(d.getMinutes());
+  }
+}
+
+function currentRoomColour(){
+  if(S.room && S.room.rgb) return S.room.rgb;
+  if(S.room && S.room.name && ROOM_COLOURS[S.room.name]) return ROOM_COLOURS[S.room.name];
+  return ROOM_COLOURS.graphite;
+}
+function currentRoomName(){
+  if(S.room && S.room.name && ROOM_COLOURS[S.room.name]) return S.room.name;
+  return 'graphite';
+}
+var lastBgRoom = null;
+function renderBackground(){
+  var room = currentRoomName();
+  if(room === lastBgRoom) return;
+  lastBgRoom = room;
+  document.getElementById('bgSharp').style.backgroundImage = "url('bg/" + room + ".jpg')";
+  var rgb = currentRoomColour();
+  document.documentElement.style.setProperty('--accent', rgb);
+  document.documentElement.style.setProperty('--accent-soft', hexToRgba(rgb, 0.22));
+}
+
+function renderNudge(){
+  var el = document.getElementById('nudgeTitle');
+  if(S.mode === 'readonly'){
+    el.textContent = "Remote's offline, use the TV";
+    return;
+  }
+  var today = S.feeds.today || {};
+  var raw = today.nudge || today.headline || '';
+  var looksLikeScaffold = /feed set up|lands at|placeholder/i.test(raw);
+  var nudge = (raw && !looksLikeScaffold && today.written_at) ? raw : fallbackNudge();
+  el.textContent = nudge;
+}
+function fallbackNudge(){
+  var cal = S.feeds.cal;
+  var now = nowDate();
+  if(cal && cal.events && cal.events.length){
+    var upcoming = cal.events.filter(function(e){
+        if(e.allDay || new Date(e.end) <= now) return false;
+        return e.cal !== 'Home' || (new Date(e.start) - now) <= 3*3600000;
+      })
+      .map(function(e){ return {title:e.title, where:e.where, start:new Date(e.start)}; })
+      .sort(function(a,b){ return a.start-b.start; });
+    if(upcoming.length){
+      var e = upcoming[0];
+      var isTmr = e.start.toDateString() !== now.toDateString();
+      return (isTmr ? 'Tomorrow ' : 'Next ') + pad(e.start.getHours())+':'+pad(e.start.getMinutes()) + ' · ' + e.title.replace(/\s*\([^)]*\)\s*$/, '') + (e.where ? ', ' + e.where : '');
+    }
+  }
+  var today = S.feeds.today || {};
+  var focus3 = today.focus3 || [];
+  if(focus3.length) return typeof focus3[0]==='string' ? focus3[0] : (focus3[0].title||'');
+  return '';
+}
+function renderKeyErr(){
+  var hint = document.getElementById('keyErrHint');
+  var err = S.tv && S.tv.keyErr;
+  if(err){ hint.textContent = 'TV keys unavailable right now'; hint.style.display=''; }
+  else { hint.style.display='none'; }
+}
+
+/* ---------- Today timeline ---------- */
+function renderToday(){
+  var el = document.getElementById('todayBody');
+  var cal = S.feeds.cal;
+  var tomorrowFlag = document.getElementById('tomorrowFlag');
+  if(!cal || !cal.events || !cal.events.length){
+    el.innerHTML = '<div class="emptyLine">Nothing booked today</div>';
+    tomorrowFlag.style.display = 'none';
+    return;
+  }
+  var now = nowDate();
+  var dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var dayEnd = new Date(dayStart.getTime() + 24*3600*1000);
+  var events = cal.events.map(function(e){
+    return { title:e.title, where:e.where, cal:e.cal, allDay:!!e.allDay, start:new Date(e.start), end:new Date(e.end) };
+  });
+  var todays = events.filter(function(e){ return !e.allDay && e.start < dayEnd && e.end > dayStart; });
+  var allDayToday = events.filter(function(e){ return e.allDay && e.start < dayEnd && e.end > dayStart; });
+
+  var showingTomorrow = false;
+  var dayEvents = todays;
+  if(!dayEvents.length){
+    var tmrStart = dayEnd, tmrEnd = new Date(dayEnd.getTime()+24*3600*1000);
+    dayEvents = events.filter(function(e){ return !e.allDay && e.start < tmrEnd && e.end > tmrStart; });
+    showingTomorrow = dayEvents.length > 0;
+  }
+  // Home-calendar items only within next 3h
+  dayEvents = dayEvents.filter(function(e){
+    if(e.cal !== 'Home') return true;
+    var diffH = (e.start.getTime() - now.getTime())/3600000;
+    return diffH <= 3;
+  });
+
+  tomorrowFlag.style.display = showingTomorrow ? '' : 'none';
+
+  if(!dayEvents.length && !allDayToday.length){
+    el.innerHTML = '<div class="emptyLine">Nothing booked today</div>';
+    return;
+  }
+  dayEvents.sort(function(a,b){ return a.start-b.start; });
+
+  // Lay out so NOW is always visible: past collapses to one dim "N done" line,
+  // the current/next event is highlighted, upcoming follows — never a time-proportional
+  // position against a non-proportional list (that never lined up right).
+  var past = [], current = null, upcoming = [];
+  dayEvents.forEach(function(e){
+    if(showingTomorrow){ upcoming.push(e); return; }
+    if(e.end <= now) past.push(e);
+    else if(e.start <= now && e.end > now) current = e;
+    else upcoming.push(e);
+  });
+
+  var html = '';
+  if(allDayToday.length){
+    html += '<div class="allDayChips">' + allDayToday.map(function(e){
+      return '<span class="chip">'+esc(e.title)+'</span>';
+    }).join('') + '</div>';
+  }
+  html += '<div class="timelineEvents" id="timelineEvents">';
+  if(past.length){
+    html += '<div class="pastSummary">'+past.length+' done</div>';
+  }
+  if(!showingTomorrow){
+    html += '<div class="nowLine"><span class="line"></span><span class="dot"></span><span class="label">Now</span><span class="line"></span></div>';
+  }
+  if(current) html += evtHtml(current, true, showingTomorrow);
+  upcoming.forEach(function(e){ html += evtHtml(e, false, showingTomorrow); });
+  if(!current && !upcoming.length && !showingTomorrow){
+    var t0 = dayEnd, t1 = new Date(dayEnd.getTime()+24*3600*1000);
+    var tmr = events.filter(function(e){ return !e.allDay && e.cal !== 'Home' && e.start >= t0 && e.start < t1; })
+      .sort(function(a,b){ return a.start-b.start; }).slice(0,4);
+    if(tmr.length){
+      html += '<div class="pastSummary" style="margin-top:6px;">Done for today · tomorrow</div>';
+      tmr.forEach(function(e, i){ html += evtHtml(e, i===0, true); });
+    } else {
+      html += '<div class="emptyLine" style="margin:8px 0;">Nothing left today</div>';
+    }
+  }
+  html += '</div>';
+  el.innerHTML = html;
+  scrollToCurrent();
+}
+function evtHtml(e, isCurrent, showingTomorrow){
+  var cls = 'evt' + (isCurrent?' current':'') + (showingTomorrow?' tomorrow':'');
+  var timeLabel = (showingTomorrow ? 'Tomorrow ' : '') + pad(e.start.getHours())+':'+pad(e.start.getMinutes());
+  var h = '<div class="'+cls+'">';
+  h += '<div class="evtTime"><span class="evtBadge">'+esc(e.cal||'')+'</span>'+timeLabel+'</div>';
+  h += '<div class="evtTitle">'+esc(e.title)+'</div>';
+  if(e.where) h += '<div class="evtWhere">'+esc(e.where)+'</div>';
+  h += '</div>';
+  return h;
+}
+function scrollToCurrent(){
+  var container = document.getElementById('timelineEvents');
+  if(!container) return;
+  var target = container.querySelector('.evt.current') || container.querySelector('.nowLine');
+  if(target) container.scrollTop = Math.max(0, target.offsetTop - 16);
+}
+
+/* ---------- Shared helpers for Morning / Night / phone "now" ---------- */
+function firstCollegeOrWorkTomorrow(){
+  var cal = S.feeds.cal;
+  if(!cal || !cal.events) return null;
+  var now = nowDate();
+  var tmrStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1);
+  var tmrEnd = new Date(tmrStart.getTime()+24*3600*1000);
+  var evs = cal.events.filter(function(e){
+    if(e.allDay) return false;
+    if(e.cal!=='College' && e.cal!=='Work') return false;
+    var s = new Date(e.start);
+    return s>=tmrStart && s<tmrEnd;
+  }).sort(function(a,b){ return new Date(a.start)-new Date(b.start); });
+  if(!evs.length) return null;
+  var e = evs[0], s = new Date(e.start);
+  return 'Tomorrow ' + pad(s.getHours())+':'+pad(s.getMinutes()) + ' · ' + e.title + (e.where?', '+e.where:'');
+}
+function firstEventTodayFrom(cal, now){
+  if(!cal || !cal.events) return null;
+  var dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var dayEnd = new Date(dayStart.getTime()+24*3600*1000);
+  var evs = cal.events.filter(function(e){ return !e.allDay && new Date(e.start) < dayEnd && new Date(e.end) > dayStart; })
+    .map(function(e){ return {title:e.title, where:e.where, cal:e.cal, start:new Date(e.start), end:new Date(e.end)}; })
+    .sort(function(a,b){ return a.start-b.start; });
+  return evs.length ? evs[0] : null;
+}
+function travelMinutesFor(evt){
+  if(evt && evt.cal === 'College') return 25;
+  return 20;
+}
+function nextUpcomingEvent(){
+  var cal = S.feeds.cal;
+  if(!cal || !cal.events) return null;
+  var now = nowDate();
+  var evs = cal.events.filter(function(e){ return !e.allDay && new Date(e.end) > now; })
+    .map(function(e){ return {title:e.title, where:e.where, start:new Date(e.start)}; })
+    .sort(function(a,b){ return a.start-b.start; });
+  return evs.length ? evs[0] : null;
+}
+function morningRideVerdict(){
+  if(!S.weather) return '';
+  try{
+    var hrs = S.weather.hourly;
+    var idx = nearestHourIdx(hrs.time);
+    if(idx<0) return '';
+    var span = hrs.temperature_2m.slice(idx, idx+10);
+    var rainVals = (hrs.precipitation_probability||[]).slice(idx, idx+10);
+    var windVals = (hrs.wind_gusts_10m || hrs.wind_speed_10m || []).slice(idx, idx+10);
+    var t = Math.min.apply(null, span);
+    var rain = rainVals.length ? Math.max.apply(null, rainVals) : null;
+    var wind = windVals.length ? Math.max.apply(null, windVals) : null;
+    return weatherVerdict(t, rain, wind);
+  }catch(e){ return ''; }
+}
+
+/* ---------- Night view (21:00-05:00): bed/alarm/kit, not the day grid ---------- */
+function renderNight(){
+  var el = document.getElementById('specialView');
+  var tonight = S.feeds.tonight || {};
+  var d = nowDate();
+  var tomorrowFirst = firstCollegeOrWorkTomorrow() || tonight.tomorrow_first || '';
+  var alarm = tonight.first_alarm ? ('Alarm ' + tonight.first_alarm) : '';
+  var bed = tonight.bed ? ('Bed by ' + tonight.bed) : '';
+  var kit = tonight.kit || [];
+  var calm = (d.getHours()<5) ? 'Still up — try to get some rest' : 'Goodnight, Harry';
+  var html = '';
+  if(tomorrowFirst) html += '<div class="svBig">'+esc(tomorrowFirst)+'</div>';
+  if(alarm) html += '<div class="svLine">'+esc(alarm)+'</div>';
+  if(kit.length) html += '<div class="svKit">' + kit.map(function(k){ return '<span class="kitChip">'+esc(k)+'</span>'; }).join('') + '</div>';
+  if(bed) html += '<div class="svLine">'+esc(bed)+'</div>';
+  html += '<div class="svLine svCalm">'+esc(calm)+'</div>';
+  el.innerHTML = html;
+}
+
+/* ---------- Morning view (05:00-10:00): leave-by, ride verdict, gym, focus3 ---------- */
+function renderMorning(){
+  var el = document.getElementById('specialView');
+  var cal = S.feeds.cal, today = S.feeds.today || {};
+  var now = nowDate();
+  var html = '<div class="svBig">Good morning</div>';
+  var firstEvt = firstEventTodayFrom(cal, now);
+  if(firstEvt){
+    var travel = travelMinutesFor(firstEvt);
+    var leaveBy = new Date(firstEvt.start.getTime() - travel*60000);
+    html += '<div class="svLine">'+esc(firstEvt.title + (firstEvt.where?', '+firstEvt.where:'')) + ' at ' + pad(firstEvt.start.getHours())+':'+pad(firstEvt.start.getMinutes())+'</div>';
+    html += '<div class="svLine">Leave by ' + pad(leaveBy.getHours())+':'+pad(leaveBy.getMinutes()) + '</div>';
+  }
+  var verdict = morningRideVerdict();
+  if(verdict) html += '<div class="svLine">'+esc(verdict)+'</div>';
+  if(today.gym && (today.gym.what || today.gym.today)) html += '<div class="svLine">Gym: '+esc(today.gym.what || 'today')+'</div>';
+  var focus3 = today.focus3 || [];
+  if(focus3.length) html += '<div class="svKit">' + focus3.slice(0,3).map(function(f){ return '<span class="kitChip">'+esc(typeof f==='string'?f:f.title||'')+'</span>'; }).join('') + '</div>';
+  el.innerHTML = html;
+}
+
+/* ---------- Phone compact "now" card ---------- */
+function phoneRideVerdict(){
+  if(!S.weather) return '';
+  try{
+    var hrs = S.weather.hourly;
+    var idx = nearestHourIdx(hrs.time);
+    if(idx<0) return '';
+    var t = Math.round(hrs.temperature_2m[idx]);
+    var rain = hrs.precipitation_probability ? hrs.precipitation_probability[idx] : null;
+    var windSrc = hrs.wind_gusts_10m || hrs.wind_speed_10m;
+    var wind = windSrc ? Math.round(windSrc[idx]) : null;
+    return weatherVerdict(t, rain, wind);
+  }catch(e){ return ''; }
+}
+function renderPhoneNow(){
+  var el = document.getElementById('phoneNow');
+  if(!document.body.classList.contains('phone')) return;
+  var d = nowDate();
+  var today = S.feeds.today || {};
+  var next = nextUpcomingEvent();
+  var verdict = phoneRideVerdict();
+  var focus3 = today.focus3 || [];
+  var topFocus = focus3.length ? (typeof focus3[0]==='string' ? focus3[0] : (focus3[0].title||'')) : '';
+  var html = '<div class="pnTime">'+pad(d.getHours())+':'+pad(d.getMinutes())+'</div>';
+  if(next) html += '<div class="pnLine">Next: '+esc(next.title)+' '+pad(next.start.getHours())+':'+pad(next.start.getMinutes())+'</div>';
+  if(verdict) html += '<div class="pnLine">'+esc(verdict)+'</div>';
+  if(topFocus) html += '<div class="pnLine">'+esc(topFocus)+'</div>';
+  el.innerHTML = html;
+}
+
+/* ---------- Focus card ---------- */
+function renderFocus(){
+  var el = document.getElementById('focusBody');
+  var today = S.feeds.today || {};
+  var rem = S.feeds.rem || {};
+  var focus3 = today.focus3 || [];
+  var homework = today.homework || [];
+  var remItems = (rem.items || []).slice(0,3);
+  var remExtra = Math.max(0, (rem.items||[]).length - 3);
+
+  if(!focus3.length && !remItems.length && !homework.length){
+    el.innerHTML = '<div class="emptyLine">Nothing flagged — clear focus</div>';
+    return;
+  }
+  var html = '';
+  if(focus3.length){
+    html += '<ul class="focusList">' + focus3.map(function(f){
+      return '<li><span class="tick"></span><span>'+esc(typeof f==='string'?f:f.title||'')+'</span></li>';
+    }).join('') + '</ul>';
+  }
+  if(remItems.length){
+    html += '<div class="focusSub">Reminders</div>';
+    html += remItems.map(function(r){ return '<div class="remItem">'+esc(r.title||r)+'</div>'; }).join('');
+    if(remExtra>0) html += '<div class="remMore">+'+remExtra+' more</div>';
+  }
+  if(homework.length){
+    html += '<div class="focusSub">Homework</div>';
+    html += homework.slice(0,3).map(function(h){ return '<div class="remItem">'+esc(typeof h==='string'?h:h.title||'')+'</div>'; }).join('');
+  }
+  el.innerHTML = html;
+}
+
+/* ---------- 11x card ---------- */
+function money(str){ if(typeof str==='number') return '£'+str; return str; }
+function numFromMoney(s){ if(typeof s==='number') return s; if(!s) return null; var n=parseFloat(String(s).replace(/[^0-9.]/g,'')); return isNaN(n)?null:n; }
+function render11x(){
+  var el = document.getElementById('elevenxBody');
+  var sh = S.feeds.sh;
+  if(!sh){ el.innerHTML = '<div class="emptyLine">No business data</div>'; return; }
+  var mrr = sh.mrr, goal = sh.goal_mrr, pct = sh.goal_pct;
+  var html = '';
+  if(mrr !== undefined){
+    html += '<div><span class="mrrBig">'+esc(money(mrr))+'</span>';
+    if(goal!==undefined) html += '<span class="mrrGoal">/ '+esc(money(goal))+'</span>';
+    html += '</div>';
+    if(pct!==undefined) html += '<div class="pctChip">'+pct+'%</div>';
+    var mrrN = numFromMoney(mrr), goalN = numFromMoney(goal);
+    if(mrrN!==null && goalN){
+      var p = Math.max(0, Math.min(100, (mrrN/goalN)*100));
+      var markerPct = Math.max(0, Math.min(100, (2000/goalN)*100));
+      html += '<div class="progressWrap"><div class="progressTrack"><div class="progressFill" style="width:'+p+'%"></div></div>';
+      html += '<div class="progressMarker" style="left:'+markerPct+'%"></div>';
+      html += '<div class="progressMarkerLabel" style="left:'+markerPct+'%">£2k</div></div>';
+    }
+  } else {
+    html += '<div class="emptyLine">No MRR figure yet</div>';
+  }
+  if(sh.month_added !== undefined){
+    html += '<div class="statLine">This month <b>+'+esc(money(sh.month_added))+'</b>' + (sh.month_needed!==undefined?' of +'+esc(money(sh.month_needed))+' needed':'') + '</div>';
+  }
+  if(sh.outreach_today !== undefined){
+    html += '<div class="statLine">Sent today <b>'+sh.outreach_today+(sh.outreach_target!==undefined?' / '+sh.outreach_target:'')+'</b></div>';
+    html += dotsRow(sh.outreach_today, sh.outreach_target);
+  }
+  if(sh.conversations_7d !== undefined){
+    html += '<div class="statLineSecondary">Conversations 7d '+sh.conversations_7d+(sh.conversations_target!==undefined?' / '+sh.conversations_target:'')+'</div>';
+  }
+  if(sh.replies_waiting){
+    html += '<div class="waitingLine">'+sh.replies_waiting+' repl'+(sh.replies_waiting===1?'y':'ies')+' waiting</div>';
+  }
+  if(sh.tasks_mine && sh.tasks_mine.length){
+    html += '<div class="shTasks">' + sh.tasks_mine.slice(0,2).map(function(t){ return '<div class="shTask">'+esc(t)+'</div>'; }).join('') + '</div>';
+  }
+  el.innerHTML = html;
+}
+function dotsRow(n, target){
+  if(target===undefined) return '';
+  var dots = '';
+  for(var i=0;i<target;i++){ dots += '<span class="'+(i<n?'filled':'')+'"></span>'; }
+  return '<div class="dotsRow">'+dots+'</div>';
+}
+
+/* ---------- Chips strip (countdowns + gym) ---------- */
+function daysUntil(dateStr){
+  var now = nowDate();
+  var d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var target = new Date(dateStr);
+  var t0 = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+  return Math.round((t0-d0)/86400000);
+}
+function renderChipsStrip(){
+  var el = document.getElementById('chipsStrip');
+  var today = S.feeds.today || {};
+  var countdowns = (today.countdowns && today.countdowns.length) ? today.countdowns : COUNTDOWN_DEFAULTS;
+  var html = countdowns.map(function(c){
+    var d = daysUntil(c.date);
+    if(d < 0) return '';
+    var soon = d <= 14;
+    return '<span class="countChip'+(soon?'':' countChipFar')+'">'+esc(c.what)+' '+d+'d</span>';
+  }).join('');
+  if(today.gym && (today.gym.what || today.gym.today)){
+    html += '<span class="gymChip">'+gymIcon()+esc(today.gym.what || 'Gym')+'</span>';
+  }
+  el.innerHTML = html || '';
+  el.style.display = html ? '' : 'none';
+}
+function gymIcon(){ return '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10"/></svg>'; }
+
+/* ---------- Weather strip ---------- */
+function renderWeatherStrip(){
+  var el = document.getElementById('weatherStrip');
+  if(!S.weather){ el.style.display='none'; return; }
+  try{
+    var hrs = S.weather.hourly;
+    var idx = nearestHourIdx(hrs.time);
+    if(idx<0){ el.style.display='none'; return; }
+    var now = Math.round(hrs.temperature_2m[idx]);
+    var feels = hrs.apparent_temperature ? Math.round(hrs.apparent_temperature[idx]) : now;
+    var rain = hrs.precipitation_probability ? hrs.precipitation_probability[idx] : null;
+    var windSrc = hrs.wind_gusts_10m || hrs.wind_speed_10m;
+    var wind = windSrc ? Math.round(windSrc[idx]) : null;
+    var dayVals = hrs.temperature_2m.slice(idx, idx+15);
+    var hi = Math.round(Math.max.apply(null, dayVals));
+    var lo = Math.round(Math.min.apply(null, dayVals));
+    var verdict = weatherVerdict(now, rain, wind);
+    el.innerHTML =
+      '<span class="wxNow">'+now+'°</span>' +
+      (feels!==now ? '<span class="wxMeta">feels '+feels+'°</span>' : '') +
+      '<span class="wxMeta">'+lo+'° → '+hi+'°' + (rain!==null?' · '+rain+'% rain':'') + (wind!==null?' · '+wind+'mph':'') + '</span>' +
+      '<span class="wxVerdict">'+esc(verdict)+'</span>';
+    el.style.display='flex';
+  }catch(e){ el.style.display='none'; }
+}
+function weatherVerdict(t, rain, wind){
+  if(rain!==null && rain>=50) return 'Wet ride home, pack waterproofs';
+  if(t<=4) return 'Cold, thermals and winter gloves';
+  if(wind!==null && wind>=25) return 'Windy, mind the gusts';
+  if(t>=18) return 'Mild, light layers fine';
+  return 'Mild, a jacket will do';
+}
+
+/* ================= Dock ================= */
+var APP_BRAND = {
+  netflix:{bg:'#E50914', glyph:'N'},
+  youtube:{bg:'#FF0000', glyph:'▶'},
+  spotify:{bg:'#1DB954', glyph:'●'},
+  prime:{bg:'#00A8E1', glyph:'P'},
+  live:{bg:'#2C2C2E', glyph:'TV'},
+  console:{bg:'#6E6E73', glyph:'C'}
+};
+function brandSwatch(key){
+  var b = APP_BRAND[key] || {bg:'#6E6E73', glyph:'?'};
+  return '<span class="appSwatch" style="background:'+b.bg+'">'+b.glyph+'</span>';
+}
+function svgIcon(name){
+  var icons = {
+    power:'<path d="M12 2v8"/><path d="M18.4 6.6a8 8 0 1 1-12.8 0"/>',
+    wake:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>',
+    night:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+    standby:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11.2c.6.4 1 1.1 1 1.8h4c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z"/>',
+    input:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+    live:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/>',
+    gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>'
+  };
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6">'+(icons[name]||'')+'</svg>';
+}
+
+function wireDock(){
+  document.getElementById('dockPower').innerHTML =
+    btnHtml('power','Power', svgIcon('power')) +
+    btnHtml('wake','Wake', svgIcon('wake')) +
+    btnHtml('night','Night', svgIcon('night')) +
+    btnHtml('standby','Standby', svgIcon('standby'));
+
+  document.getElementById('dockVol').innerHTML =
+    '<button class="dockBtn" data-action="volume_down" data-v="2">−</button>' +
+    '<div class="volBar" id="volBar"><div class="volBarTrack"><div class="volBarFill" id="volBarFill" style="width:0%"></div></div></div>' +
+    '<span class="volLabel" id="volLabel">—</span>' +
+    '<button class="dockBtn" data-action="volume_up" data-v="2">+</button>';
+
+  document.getElementById('dockApps').innerHTML =
+    appBtnHtml('netflix','Netflix') + appBtnHtml('youtube','YouTube') + appBtnHtml('spotify','Spotify') +
+    appBtnHtml('prime','Prime') + liveBtnHtml() + consoleBtnHtml();
+
+  document.getElementById('dockExtra').innerHTML =
+    '<button class="dockBtn" data-action="lights_power" id="lightsBtn">'+svgIcon('bulb')+'<span>Lights</span></button>' +
+    '<button class="dockBtn" data-open="scenes">Scenes ▾</button>' +
+    '<button class="dockBtn" data-open="more">More ▾</button>';
+
+  document.getElementById('volBar').addEventListener('click', function(){ doAction('mute', null, this); });
+
+  document.body.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-action]');
+    if(btn && !document.getElementById('dock').classList.contains('readonly')){
+      var v = btn.dataset.v !== undefined ? (isNaN(btn.dataset.v)?btn.dataset.v:Number(btn.dataset.v)) : undefined;
+      doAction(btn.dataset.action, v, btn);
+      return;
+    }
+    var opener = e.target.closest('[data-open]');
+    if(opener && !document.getElementById('dock').classList.contains('readonly')){
+      openSheet(opener.dataset.open);
+      return;
+    }
+    if(e.target.id === 'moreSheet'){ closeSheet(); }
+  });
+}
+function btnHtml(action, label, icon){
+  return '<button class="dockBtn" data-action="'+action+'" title="'+label+'">'+icon+'<span>'+label+'</span></button>';
+}
+function appBtnHtml(key, label){
+  return '<button class="dockBtn appBtn" data-action="app" data-v="'+key+'" data-app="'+key+'">'+brandSwatch(key)+'<span>'+label+'</span></button>';
+}
+function liveBtnHtml(){ return '<button class="dockBtn appBtn" data-action="live" data-app="live">'+brandSwatch('live')+'<span>Live TV</span></button>'; }
+function consoleBtnHtml(){ return '<button class="dockBtn appBtn" data-action="input" data-v="3" data-app="console">'+brandSwatch('console')+'<span>Console</span></button>'; }
+
+function renderDock(){
+  var dock = document.getElementById('dock');
+  var ro = (S.mode !== 'live');
+  dock.classList.toggle('readonly', ro);
+  document.getElementById('roDockMsg').style.display = ro ? '' : 'none';
+  ['dockPower','dockVol','dockApps','dockExtra'].forEach(function(id){
+    document.getElementById(id).style.display = ro ? 'none' : 'flex';
+  });
+  if(ro) return;
+
+  var tv = S.tv || {};
+  var matchedKey = tv.app ? appKeyFromPkg(tv.app) : null;
+  var screenIsApp = tv.screen === 'app';
+  document.querySelectorAll('.appBtn').forEach(function(b){
+    var isLiveTile = b.dataset.app === 'live';
+    var active = matchedKey ? (b.dataset.app === matchedKey) : (isLiveTile && screenIsApp);
+    b.classList.toggle('active', active);
+  });
+  var vol = tv.volume, max = tv.volMax || 60;
+  var pct = (vol!==undefined && max) ? Math.round((vol/max)*100) : 0;
+  document.getElementById('volBarFill').style.width = pct+'%';
+  document.getElementById('volLabel').textContent = (tv.muted ? 'Muted' : (vol!==undefined ? vol+'/'+max : '—'));
+
+  var lightsBtn = document.getElementById('lightsBtn');
+  if(S.lights && S.lights.known){
+    lightsBtn.classList.toggle('active', !!S.lights.on);
+  }
+}
+function appKeyFromPkg(pkg){
+  if(!pkg) return null;
+  if(pkg.indexOf('netflix')>=0) return 'netflix';
+  if(pkg.indexOf('youtube')>=0) return 'youtube';
+  if(pkg.indexOf('spotify')>=0) return 'spotify';
+  if(pkg.indexOf('amazon')>=0 || pkg.indexOf('prime')>=0) return 'prime';
+  return null;
+}
+
+/* ---------- Action dispatch with pending/confirm ---------- */
+var pendingTimers = new WeakMap(); // btnEl -> array of timeout ids (double-tap keeps every pending timer, not just the latest)
+function doAction(a, v, btnEl){
+  if(S.mode !== 'live'){ return; }
+  if(btnEl){
+    btnEl.classList.add('pending');
+    var timeout = setTimeout(function(){
+      btnEl.classList.remove('pending');
+      showToast("didn't reach the TV");
+    }, 2500);
+    var arr = pendingTimers.get(btnEl) || [];
+    arr.push(timeout);
+    pendingTimers.set(btnEl, arr);
+  }
+  var body = {a:a};
+  if(v !== undefined) body.v = v;
+  fetch('/api/do', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Harry':'1'},
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(6000)
+  }).then(function(r){ return r.json(); }).then(function(res){
+    if(btnEl){
+      var arr = pendingTimers.get(btnEl) || [];
+      arr.forEach(function(t){ clearTimeout(t); });
+      pendingTimers.set(btnEl, []);
+      btnEl.classList.remove('pending');
+    }
+    if(res && res.ok && res.state){ onLiveState(res.state); }
+    else if(res && res.ok===false){ showToast(res.error || "didn't reach the TV"); }
+  }).catch(function(){
+    showToast("didn't reach the TV");
+  });
+}
+
+/* ---------- More / scenes sheet ---------- */
+function openSheet(which){
+  var panel = document.getElementById('sheetPanel');
+  if(which === 'scenes'){
+    panel.innerHTML = sheetHeadHtml('Scenes') +
+      '<div class="sheetSection"><div class="pillRow">' +
+      ['movie','study','winddown','morning'].map(function(s){
+        return '<button class="pillBtn" data-action="scene" data-v="'+s+'">'+sceneLabel(s)+'</button>';
+      }).join('') + '</div></div>';
+  } else {
+    var brightness = (S.lights && S.lights.brightness) || 50;
+    panel.innerHTML = sheetHeadHtml('More') +
+      '<div class="sheetSection"><div class="sheetLabel">HDMI input</div><div class="pillRow">' +
+      [1,2,3,4].map(function(i){ return '<button class="pillBtn" data-action="input" data-v="'+i+'">HDMI '+i+'</button>'; }).join('') +
+      '</div></div>' +
+      '<div class="sheetSection"><div class="sheetLabel">Ambilight</div>' +
+      '<div class="ambiLabel">'+(S.ambi&&S.ambi.label?esc(S.ambi.label):'Ambilight off')+'</div>' +
+      '<div class="scrollChips">' + AMBI_STYLES.map(function(s){
+        var sel = (S.ambi && S.ambi.style===s) ? ' selected' : '';
+        return '<button class="chipBtn'+sel+'" data-action="ambilight_style" data-v="'+esc(s)+'">'+esc(s)+'</button>';
+      }).join('') + '</div>' +
+      '<div class="ambiNote">takes a few seconds</div>' +
+      '</div>' +
+      '<div class="sheetSection"><button class="pillBtn" data-action="spotify_night">Spotify, then night</button></div>' +
+      '<div class="sheetSection"><div class="sheetLabel">Brightness</div><div class="sliderRow">' +
+      '<input type="range" min="1" max="100" value="'+brightness+'" id="brightSlider">' +
+      '<span class="sliderValue" id="brightValue">'+brightness+'</span>' +
+      '</div></div>' +
+      '<div class="sheetSection"><div class="sheetLabel">Room colour</div><div class="swatchRow">' +
+      SWATCH_ORDER.map(function(c){
+        var sel = currentRoomName()===c ? ' selected' : '';
+        return '<button class="swatch'+sel+'" style="background:'+ROOM_COLOURS[c]+'" data-action="lights_colour" data-v="'+c+'"></button>';
+      }).join('') + '</div></div>' +
+      goveeScenesHtml() +
+      remotePadHtml();
+    var slider = panel.querySelector('#brightSlider');
+    var brightValue = panel.querySelector('#brightValue');
+    slider.addEventListener('input', function(){ brightValue.textContent = slider.value; });
+    slider.addEventListener('change', function(){ doAction('lights_brightness', Number(slider.value)); });
+  }
+  document.getElementById('moreSheet').classList.add('open');
+}
+var GOVEE_PRIORITY = ['Sunset','Aurora','Starry Sky','Forest','Moonlight','Sunrise'];
+function goveeScenesHtml(){
+  var scenes = (S.lights && S.lights.goveeScenes) || [];
+  if(!scenes.length) return '';
+  var ordered = GOVEE_PRIORITY.filter(function(s){ return scenes.indexOf(s)>=0; })
+    .concat(scenes.filter(function(s){ return GOVEE_PRIORITY.indexOf(s)<0; }));
+  return '<div class="sheetSection"><div class="sheetLabel">Govee scenes</div>' +
+    '<div class="scrollChips">' + ordered.map(function(s){
+      var sel = (S.lights && S.lights.scene===s) ? ' selected' : '';
+      return '<button class="chipBtn'+sel+'" data-action="govee_scene" data-v="'+esc(s)+'">'+esc(s)+'</button>';
+    }).join('') + '</div></div>';
+}
+function remotePadHtml(){
+  return '<div class="sheetSection"><div class="sheetLabel">Remote</div>' +
+    '<div class="remotePad">' +
+    '<div class="remoteRow"><span></span><button class="pillBtn remoteKey" data-action="key" data-v="19">▲</button><span></span></div>' +
+    '<div class="remoteRow"><button class="pillBtn remoteKey" data-action="key" data-v="21">◀</button>' +
+    '<button class="pillBtn remoteKey remoteOk" data-action="key" data-v="23">OK</button>' +
+    '<button class="pillBtn remoteKey" data-action="key" data-v="22">▶</button></div>' +
+    '<div class="remoteRow"><span></span><button class="pillBtn remoteKey" data-action="key" data-v="20">▼</button><span></span></div>' +
+    '<div class="remoteRow remoteBottom">' +
+    '<button class="pillBtn" data-action="key" data-v="4">Back</button>' +
+    '<button class="pillBtn" data-action="key" data-v="3">Home</button>' +
+    '<button class="pillBtn" data-action="key" data-v="85">Play/Pause</button>' +
+    '</div></div></div>';
+}
+function sheetHeadHtml(title){
+  return '<div class="sheetHead"><h2>'+title+'</h2><button class="pillBtn" id="sheetDone">Done</button></div>';
+}
+function sceneLabel(s){ return {movie:'Movie',study:'Study',winddown:'Wind down',morning:'Morning'}[s]||s; }
+function closeSheet(){ document.getElementById('moreSheet').classList.remove('open'); }
+document.addEventListener('click', function(e){
+  if(e.target.id === 'sheetDone') closeSheet();
+});
+
+/* ================= Glass mask (single backdrop-filter, clipped to cards) ================= */
+function roundRectPath(x,y,w,h,r){
+  r = Math.min(r, w/2, h/2);
+  return 'M'+(x+r)+','+y+
+    ' H'+(x+w-r)+' A'+r+','+r+' 0 0 1 '+(x+w)+','+(y+r)+
+    ' V'+(y+h-r)+' A'+r+','+r+' 0 0 1 '+(x+w-r)+','+(y+h)+
+    ' H'+(x+r)+' A'+r+','+r+' 0 0 1 '+x+','+(y+h-r)+
+    ' V'+(y+r)+' A'+r+','+r+' 0 0 1 '+(x+r)+','+y+' Z';
+}
+function rebuildGlassMask(){
+  var sheet = document.getElementById('glassSheet');
+  var els = Array.prototype.slice.call(document.querySelectorAll('.glass'));
+  var path = els.map(function(el){
+    var r = el.getBoundingClientRect();
+    if(r.width<1 || r.height<1) return '';
+    var radius = parseFloat(getComputedStyle(el).borderRadius) || 22;
+    return roundRectPath(r.left, r.top, r.width, r.height, radius);
+  }).filter(Boolean).join(' ');
+  if(path){
+    sheet.style.clipPath = 'path("'+path+'")';
+    sheet.style.webkitClipPath = 'path("'+path+'")';
+    sheet.style.display = '';
+  } else {
+    sheet.style.display = 'none';
+  }
+}
+
+/* ================= Toast ================= */
+var toastTimer = null;
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+
+/* ================= Helpers ================= */
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+/* ================= Go ================= */
+document.addEventListener('DOMContentLoaded', boot);
+if(document.readyState !== 'loading') boot();
+
+})();
+</script>
+</body>
+</html>
